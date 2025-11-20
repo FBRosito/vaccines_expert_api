@@ -2,7 +2,6 @@ import datetime
 from typing import TYPE_CHECKING
 from experta import Rule, MATCH, NOT, OR, TEST, KnowledgeEngine
 from dateutil.relativedelta import relativedelta
-from schema import Or
 
 if TYPE_CHECKING:
     _RegrasBase = KnowledgeEngine
@@ -156,7 +155,7 @@ class RegrasPentaDTP(_RegrasBase):
         """
         self.declare(Contraindicacao(
             vacina="Penta",
-            dose=Or(1, 2, 3),
+            dose="Todas",
             motivo="Idade superior a 6 anos, 11 meses e 29 dias.",
             explicacao="A vacina Penta é contraindicada para crianças com 7 anos ou mais."
         ))

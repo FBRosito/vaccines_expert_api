@@ -1,0 +1,437 @@
+:root {
+    --primary: #005eb8; /* Azul Médico */
+    --primary-light: #e6f0fa;
+    --secondary: #00a88d; /* Verde Saúde */
+    --bg-body: #f4f7f9;
+    --surface: #ffffff;
+    --text-main: #2d3748;
+    --text-muted: #718096;
+    --border: #e2e8f0;
+    --danger: #e53e3e;
+    --warning: #dd6b20;
+    
+    /* Cores de Status Solicitadas */
+    --status-green: #10b981; /* Recomendadas */
+    --status-yellow: #f59e0b; /* Aprazadas */
+    --status-red: #ef4444; /* Contraindicadas */
+    --status-blue: #3b82f6; /* Em dia */
+
+    --radius: 12px;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app-container {
+    display: flex;
+    height: 100%;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 3rem;
+}
+
+.sidebar nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--text-muted);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.sidebar nav a.active, .sidebar nav a:hover {
+    background-color: var(--primary-light);
+    color: var(--primary);
+}
+
+/* Content */
+.content {
+    flex: 1;
+    padding: 2rem 4rem;
+    overflow-y: auto;
+}
+
+header h1 { color: var(--primary); font-size: 1.8rem; margin-bottom: 0.5rem; }
+header p { color: var(--text-muted); margin-bottom: 2rem; }
+
+/* Forms & Cards */
+.card {
+    background: var(--surface);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    margin-bottom: 2rem;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-main);
+}
+
+input, select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 1rem;
+    background: #f8fafc;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: #fff;
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Vaccine Accordion Styles */
+.vaccine-list h3 { margin-bottom: 0.5rem; }
+.subtitle { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+.group-label { 
+    font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; 
+    color: var(--text-muted); font-weight: 700; margin: 2rem 0 1rem 0; 
+}
+
+.vaccine-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.vaccine-card.active {
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(0, 94, 184, 0.15);
+}
+
+.vaccine-header {
+    padding: 1.2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    background: var(--surface);
+}
+
+.vaccine-title { display: flex; align-items: center; gap: 15px; }
+
+.vaccine-check {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.vaccine-title .text strong { display: block; font-size: 1.1rem; }
+.vaccine-title .text span { font-size: 0.85rem; color: var(--text-muted); }
+
+.arrow { transition: transform 0.3s; color: var(--text-muted); }
+.vaccine-card.active .arrow { transform: rotate(180deg); color: var(--primary); }
+
+/* Detalhes da Vacina (Container que abre/fecha) */
+.vaccine-details {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-out, background-color 0.3s;
+    background-color: var(--primary-light);
+}
+
+.vaccine-card.active .vaccine-details {
+    max-height: 1000px; /* Altura máxima segura para permitir crescimento */
+    padding: 1.5rem;    /* Padding só aparece quando aberto */
+}
+
+/* Button Submit */
+.btn-submit {
+    margin-top: 2rem;
+    width: 100%;
+    padding: 1rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.2s;
+}
+
+.btn-submit:hover { background: #004c94; }
+
+/* --- MODAL DE RESULTADO --- */
+.hidden { display: none !important; }
+
+.result-modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+}
+
+.result-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    max-width: 600px;
+    width: 95%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.4s ease;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.result-header { text-align: center; margin-bottom: 1.5rem; }
+.result-header h2 { color: var(--primary); margin-bottom: 0.5rem; }
+.result-header p { color: var(--text-muted); font-size: 0.9rem; }
+
+/* Área de Scroll */
+.result-scroll-area {
+    overflow-y: auto;
+    padding-right: 10px;
+    margin-bottom: 1.5rem;
+    flex: 1;
+}
+
+/* Grupos e Itens de Resultado */
+.result-group { margin-bottom: 1.5rem; }
+.result-group h3 {
+    font-size: 1rem; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 8px;
+}
+
+.result-item {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.8rem;
+    border-left-width: 5px;
+    border-left-style: solid;
+    text-align: left;
+}
+
+.result-item h4 { font-size: 1rem; margin-bottom: 4px; color: var(--text-main); }
+.result-item .meta { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; display: flex; gap: 10px; }
+.result-item .desc { font-size: 0.9rem; color: var(--text-main); line-height: 1.4; }
+
+/* Cores dos Resultados */
+.type-green { border-left-color: var(--status-green); }
+.type-green h3 { color: var(--status-green); }
+
+.type-yellow { border-left-color: var(--status-yellow); }
+.type-yellow h3 { color: var(--status-yellow); }
+
+.type-red { border-left-color: var(--status-red); }
+.type-red h3 { color: var(--status-red); }
+
+.type-blue { border-left-color: var(--status-blue); }
+.type-blue h3 { color: var(--status-blue); }
+
+/* Botão Fechar */
+.btn-secondary {
+    background: transparent;
+    border: 2px solid var(--border);
+    padding: 0.8rem;
+    width: 100%;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-muted);
+}
+
+.btn-secondary:hover { background: var(--bg-body); border-color: var(--text-muted); color: var(--text-main); }
+
+/* --- LISTA DINÂMICA DE DOSES --- */
+.dose-list {
+    display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;
+}
+
+.dose-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto; /* Data, Dose, Lixeira */
+    gap: 10px;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.btn-add-dose {
+    background: transparent;
+    border: 1px dashed var(--primary);
+    color: var(--primary);
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    transition: all 0.2s;
+}
+
+.btn-add-dose:hover { background: var(--primary-light); }
+
+.btn-remove-dose {
+    background: var(--danger);
+    color: white;
+    border: none;
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    transition: opacity 0.2s;
+}
+
+.btn-remove-dose:hover { opacity: 0.8; }
+
+/* --- TABELA DE REGISTROS --- */
+.table-container {
+    padding: 0;
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.95rem;
+}
+
+.data-table th {
+    background-color: #f8fafc;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+}
+
+.data-table td {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-main);
+}
+
+.data-table tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tr:hover {
+    background-color: #f1f5f9;
+}
+
+/* Badges de Sexo */
+.badge-sexo {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.badge-sexo.M {
+    background-color: #e0f2fe;
+    color: #0284c7;
+}
+
+.badge-sexo.F {
+    background-color: #fce7f3;
+    color: #db2777;
+}
+
+/* Botão Pequeno */
+.btn-small {
+    background: white;
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 6px;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.btn-small:hover {
+    background-color: var(--primary-light);
+    border-color: var(--primary);
+}

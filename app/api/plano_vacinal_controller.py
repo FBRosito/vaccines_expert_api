@@ -11,6 +11,9 @@ def obter_plano_vacinal():
     """
     Endpoint para receber dados do paciente e retornar o plano vacinal.
     """
+
+    print(f"Rota /simulador/plano-vacinal acessada.")
+
     json_data = request.get_json()
     if not json_data:
         return jsonify({"erros": "Nenhum dado de entrada fornecido."}), 400

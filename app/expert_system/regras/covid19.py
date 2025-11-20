@@ -1,5 +1,4 @@
 import datetime
-from schema import Or
 from typing import TYPE_CHECKING
 from experta import Rule, MATCH, NOT, OR, TEST, KnowledgeEngine
 from dateutil.relativedelta import relativedelta
@@ -127,7 +126,7 @@ class RegrasCovid19(_RegrasBase):
         """
         self.declare(Contraindicacao(
             vacina="COVID-19",
-            dose=Or(1, 2),
+            dose="Todas",
             motivo="Idade superior à permitida.",
             explicacao="O esquema infantil da COVID-19 é recomendado apenas até os 4 anos, 11 meses e 29 dias."
         ))

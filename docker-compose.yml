@@ -8,29 +8,36 @@ services:
       - .:/app
     env_file:
       - .env
-    # A API agora depende do serviço 'db'. O Docker Compose iniciará o 'db' primeiro.
     depends_on:
       - vacinapi_dev_db
 
-
-  # --- NOVO SERVIÇO: Banco de Dados PostgreSQL ---
+  # --- Banco de Dados PostgreSQL ---
   vacinapi_dev_db:
-    # Usa a imagem oficial do PostgreSQL. Usar uma tag específica é uma boa prática.
     image: postgres:14-alpine
-    # Monta um volume para persistir os dados do banco.
-    # Mesmo que o container seja destruído, os dados em 'postgres_data' permanecerão.
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-    # Carrega as variáveis de ambiente do nosso arquivo .env
-    # A imagem do Postgres as usa para criar o usuário e o banco de dados na primeira inicialização.
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     ports:
-      # Expõe a porta do Postgres para o host (opcional, mas útil para debugar com ferramentas como DBeaver)
       - "5433:5432"
 
-# Define o volume nomeado que será usado pelo serviço 'db' para persistir os dados.
+  # --- HTTPS Caddy ---
+  caddy:
+    image: caddy:latest
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
 volumes:
   postgres_data:
+  caddy_data:
+  caddy_config:

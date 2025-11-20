@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VacinAPI - Sistema Especialista</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="ph-fill ph-first-aid-kit"></i>
+                <span>VacinAPI</span>
+            </div>
+            <nav>
+                <!-- Use return false para evitar recarregamento da página -->
+                <a href="#" id="nav-novo" class="active" onclick="mudarTela('novo'); return false;">
+                    <i class="ph ph-user-list"></i> Novo Atendimento
+                </a>
+                <a href="#" id="nav-registros" onclick="mudarTela('registros'); return false;">
+                    <i class="ph ph-table"></i> Todos Registros
+                </a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            
+            <!-- ABA 1: FORMULÁRIO (Padrão) -->
+            <div id="view-novo">
+                <header>
+                    <h1>Triagem de Vacinação</h1>
+                    <p>Adicione o histórico completo para análise precisa de intervalos.</p>
+                </header>
+
+                <form id="vaccine-form" onsubmit="event.preventDefault(); analisarVacinas();">
+                    
+                    <section class="card patient-info">
+                        <div class="card-header">
+                            <i class="ph ph-identification-card"></i>
+                            <h2>Dados do Paciente</h2>
+                        </div>
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label>Data de Nascimento</label>
+                                <input type="date" id="nascimento" required>
+                            </div>
+                            <div class="input-group">
+                                <label>Sexo Biológico</label>
+                                <div class="select-wrapper">
+                                    <select id="sexo" required>
+                                        <option value="" disabled selected>Selecione...</option>
+                                        <option value="M">Masculino</option>
+                                        <option value="F">Feminino</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="vaccine-list">
+                        <h3>Histórico Vacinal</h3>
+                        <p class="subtitle">Marque a vacina e adicione as doses.</p>
+
+                        <div class="group-label">Básicas e Primeiros Meses</div>
+
+                        <!-- BCG -->
+                        <div class="vaccine-card" id="card-bcg">
+                            <div class="vaccine-header" onclick="toggleVaccine('bcg')">
+                                <div class="vaccine-title">
+                                    <input type="checkbox" id="check-bcg" class="vaccine-check">
+                                    <div class="text"><strong>BCG</strong><span>Tuberculose</span></div>
+                                </div>
+                                <i class="ph ph-caret-down arrow"></i>
+                            </div>
+                            <div class="vaccine-details">
+                                <div class="dose-list" id="list-bcg"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('bcg')"><i class="ph-bold ph-plus"></i> Adicionar Dose</button>
+                            </div>
+                        </div>
+
+                        <!-- HEPATITE B -->
+                        <div class="vaccine-card" id="card-hepb">
+                            <div class="vaccine-header" onclick="toggleVaccine('hepb')">
+                                <div class="vaccine-title">
+                                    <input type="checkbox" id="check-hepb" class="vaccine-check">
+                                    <div class="text"><strong>Hepatite B</strong></div>
+                                </div>
+                                <i class="ph ph-caret-down arrow"></i>
+                            </div>
+                            <div class="vaccine-details">
+                                <div class="dose-list" id="list-hepb"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('hepb')"><i class="ph-bold ph-plus"></i> Adicionar Dose</button>
+                            </div>
+                        </div>
+
+                        <!-- PENTA -->
+                        <div class="vaccine-card" id="card-penta">
+                            <div class="vaccine-header" onclick="toggleVaccine('penta')">
+                                <div class="vaccine-title">
+                                    <input type="checkbox" id="check-penta" class="vaccine-check">
+                                    <div class="text"><strong>Penta (DTP/Hib/HB)</strong></div>
+                                </div>
+                                <i class="ph ph-caret-down arrow"></i>
+                            </div>
+                            <div class="vaccine-details">
+                                <div class="dose-list" id="list-penta"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('penta')"><i class="ph-bold ph-plus"></i> Adicionar Dose</button>
+                            </div>
+                        </div>
+
+                        <!-- DTP (Reforços) -->
+                        <div class="vaccine-card" id="card-dtp">
+                            <div class="vaccine-header" onclick="toggleVaccine('dtp')">
+                                <div class="vaccine-title">
+                                    <input type="checkbox" id="check-dtp" class="vaccine-check">
+                                    <div class="text"><strong>DTP</strong><span>Reforços Infantis</span></div>
+                                </div>
+                                <i class="ph ph-caret-down arrow"></i>
+                            </div>
+                            <div class="vaccine-details">
+                                <div class="dose-list" id="list-dtp"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('dtp')"><i class="ph-bold ph-plus"></i> Adicionar Dose</button>
+                            </div>
+                        </div>
+
+                        <!-- VIP -->
+                        <div class="vaccine-card" id="card-vip">
+                            <div class="vaccine-header" onclick="toggleVaccine('vip')">
+                                <div class="vaccine-title">
+                                    <input type="checkbox" id="check-vip" class="vaccine-check">
+                                    <div class="text"><strong>Poliomielite (VIP/VOP)</strong></div>
+                                </div>
+                                <i class="ph ph-caret-down arrow"></i>
+                            </div>
+                            <div class="vaccine-details">
+                                <div class="dose-list" id="list-vip"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('vip')"><i class="ph-bold ph-plus"></i> Adicionar Dose</button>
+                            </div>
+                        </div>
+
+                        <!-- ROTAVIRUS -->
+                        <div class="vaccine-card" id="card-rota">
+                            <div class="vaccine-header" onclick="toggleVaccine('rota')">
+                                <div class="vaccine-title">
+                                    <input type="checkbox" id="check-rota" class="vaccine-check">
+                                    <div class="text"><strong>Rotavírus (VORH)</strong></div>
+                                </div>
+                                <i class="ph ph-caret-down arrow"></i>
+                            </div>
+                            <div class="vaccine-details">
+                                <div class="dose-list" id="list-rota"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('rota')"><i class="ph-bold ph-plus"></i> Adicionar Dose</button>
+                            </div>
+                        </div>
+
+                        <!-- PNEUMO -->
+                        <div class="vaccine-card" id="card-pneumo">
+                            <div class="vaccine-header" onclick="toggleVaccine('pneumo')">
+                                <div class="vaccine-title">
+                                    <input type="checkbox" id="check-pneumo" class="vaccine-check">
+                                    <div class="text"><strong>Pneumocócica 10V</strong></div>
+                                </div>
+                                <i class="ph ph-caret-down arrow"></i>
+                            </div>
+                            <div class="vaccine-details">
+                                <div class="dose-list" id="list-pneumo"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('pneumo')"><i class="ph-bold ph-plus"></i> Adicionar Dose</button>
+                            </div>
+                        </div>
+
+                        <!-- MENINGO C -->
+                        <div class="vaccine-card" id="card-meningo">
+                            <div class="vaccine-header" onclick="toggleVaccine('meningo')">
+                                <div class="vaccine-title">
+                                    <input type="checkbox" id="check-meningo" class="vaccine-check">
+                                    <div class="text"><strong>Meningocócica C</strong></div>
+                                </div>
+                                <i class="ph ph-caret-down arrow"></i>
+                            </div>
+                            <div class="vaccine-details">
+                                <div class="dose-list" id="list-meningo"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('meningo')"><i class="ph-bold ph-plus"></i> Adicionar Dose</button>
+                            </div>
+                        </div>
+
+                        <!-- MENINGO ACWY -->
+                        <div class="vaccine-card" id="card-meningo_acwy">
+                            <div class="vaccine-header" onclick="toggleVaccine('meningo_acwy')">
+                                <div class="vaccine-title">
+                                    <input type="checkbox" id="check-meningo_acwy" class="vaccine-check">
+                                    <div class="text"><strong>Meningocócica ACWY</strong></div>
+                                </div>
+                                <i class="ph ph-caret-down arrow"></i>
+                            </div>
+                            <div class="vaccine-details">
+                                <div class="dose-list" id="list-meningo_acwy"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('meningo_acwy')"><i class="ph-bold ph-plus"></i> Adicionar Dose</button>
+                            </div>
+                        </div>
+
+                        <div class="group-label">Virais e Outras</div>
+
+                        <!-- FEBRE AMARELA -->
+                        <div class="vaccine-card" id="card-fa">
+                            <div class="vaccine-header" onclick="toggleVaccine('fa')">
+                                <div class="vaccine-title">
+                                    <input type="checkbox" id="check-fa" class="vaccine-check">
+                                    <div class="text"><strong>Febre Amarela</strong></div>
+                                </div>
+                                <i class="ph ph-caret-down arrow"></i>
+                            </div>
+                            <div class="vaccine-details">
+                                <div class="dose-list" id="list-fa"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('fa')"><i class="ph-bold ph-plus"></i> Adicionar Dose</button>
+                            </div>
+                        </div>
+
+                        <!-- SCR -->
+                        <div class="vaccine-card" id="card-scr">
+                            <div class="vaccine-header" onclick="toggleVaccine('scr')">
+                                <div class="vaccine-title">
+                                    <input type="checkbox" id="check-scr" class="vaccine-check">
+                                    <div class="text"><strong>Tríplice Viral (SCR)</strong></div>
+                                </div>
+                                <i class="ph ph-caret-down arrow"></i>
+                            </div>
+                            <div class="vaccine-details">
+                                <div class="dose-list" id="list-scr"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('scr')"><i class="ph-bold ph-plus"></i> Adicionar Dose</button>
+                            </div>
+                        </div>
+
+                        <!-- TETRA -->
+                        <div class="vaccine-card" id="card-tetra">
+                            <div class="vaccine-header" onclick="toggleVaccine('tetra')">
+                                <div class="vaccine-title">
+                                    <input type="checkbox" id="check-tetra" class="vaccine-check">
+                                    <div class="text"><strong>Tetraviral (SCR-V)</strong></div>
+                                </div>
+                                <i class="ph ph-caret-down arrow"></i>
+                            </div>
+                            <div class="vaccine-details">
+                                <div class="dose-list" id="list-tetra"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('tetra')"><i class="ph-bold ph-plus"></i> Adicionar Dose</button>
+                            </div>
+                        </div>
+
+                        <!-- VARICELA -->
+                        <div class="vaccine-card" id="card-varicela">
+                            <div class="vaccine-header" onclick="toggleVaccine('varicela')">
+                                <div class="vaccine-title">
+                                    <input type="checkbox" id="check-varicela" class="vaccine-check">
+                                    <div class="text"><strong>Varicela</strong></div>
+                                </div>
+                                <i class="ph ph-caret-down arrow"></i>
+                            </div>
+                            <div class="vaccine-details">
+                                <div class="dose-list" id="list-varicela"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('varicela')"><i class="ph-bold ph-plus"></i> Adicionar Dose</button>
+                            </div>
+                        </div>
+
+                        <!-- HEPA -->
+                        <div class="vaccine-card" id="card-hepa">
+                            <div class="vaccine-header" onclick="toggleVaccine('hepa')">
+                                <div class="vaccine-title">
+                                    <input type="checkbox" id="check-hepa" class="vaccine-check">
+                                    <div class="text"><strong>Hepatite A</strong></div>
+                                </div>
+                                <i class="ph ph-caret-down arrow"></i>
+                            </div>
+                            <div class="vaccine-details">
+                                <div class="dose-list" id="list-hepa"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('hepa')"><i class="ph-bold ph-plus"></i> Adicionar Dose</button>
+                            </div>
+                        </div>
+
+                        <div class="group-label">Adolescente e Adulto</div>
+
+                        <!-- HPV -->
+                        <div class="vaccine-card" id="card-hpv">
+                            <div class="vaccine-header" onclick="toggleVaccine('hpv')">
+                                <div class="vaccine-title">
+                                    <input type="checkbox" id="check-hpv" class="vaccine-check">
+                                    <div class="text"><strong>HPV</strong></div>
+                                </div>
+                                <i class="ph ph-caret-down arrow"></i>
+                            </div>
+                            <div class="vaccine-details">
+                                <div class="dose-list" id="list-hpv"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('hpv')"><i class="ph-bold ph-plus"></i> Adicionar Dose</button>
+                            </div>
+                        </div>
+
+                        <!-- dT -->
+                        <div class="vaccine-card" id="card-dt">
+                            <div class="vaccine-header" onclick="toggleVaccine('dt')">
+                                <div class="vaccine-title">
+                                    <input type="checkbox" id="check-dt" class="vaccine-check">
+                                    <div class="text"><strong>dT (Dupla Adulto)</strong></div>
+                                </div>
+                                <i class="ph ph-caret-down arrow"></i>
+                            </div>
+                            <div class="vaccine-details">
+                                <div class="dose-list" id="list-dt"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('dt')"><i class="ph-bold ph-plus"></i> Adicionar Dose</button>
+                            </div>
+                        </div>
+
+                        <!-- COVID -->
+                        <div class="vaccine-card" id="card-covid">
+                            <div class="vaccine-header" onclick="toggleVaccine('covid')">
+                                <div class="vaccine-title">
+                                    <input type="checkbox" id="check-covid" class="vaccine-check">
+                                    <div class="text"><strong>COVID-19</strong></div>
+                                </div>
+                                <i class="ph ph-caret-down arrow"></i>
+                            </div>
+                            <div class="vaccine-details">
+                                <div class="dose-list" id="list-covid"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('covid')"><i class="ph-bold ph-plus"></i> Adicionar Dose</button>
+                            </div>
+                        </div>
+
+                    </section>
+
+                    <button type="submit" class="btn-submit" id="btn-analisar">
+                        Analisar Carteira
+                        <i class="ph-bold ph-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- ABA 2: REGISTROS DE AUDITORIA (Inicialmente Oculta) -->
+            <div id="view-registros" class="hidden">
+                <header>
+                    <h1>Registros de Auditoria</h1>
+                    <p>Histórico de todas as simulações realizadas e salvas no banco de dados.</p>
+                </header>
+
+                <div class="card table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th width="10%">ID</th>
+                                <th width="20%">Data da Simulação</th>
+                                <th width="30%">Dados do Paciente</th>
+                                <th width="20%">Doses Analisadas</th>
+                                <th width="20%">Resultado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- Linhas serão inseridas aqui via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Modal de Resultado (Compartilhado entre Novo e Histórico) -->
+            <div id="resultado-card" class="result-modal hidden">
+                <div class="result-content">
+                    <div class="result-header">
+                        <h2>Detalhes do Plano Vacinal</h2>
+                        <p>Análise processada pelo sistema especialista.</p>
+                    </div>
+                    <div class="result-scroll-area"></div>
+                    <button onclick="fecharModal()" class="btn-secondary">Fechar</button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

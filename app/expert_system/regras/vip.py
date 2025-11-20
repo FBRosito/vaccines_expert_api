@@ -2,7 +2,6 @@ import datetime
 from typing import TYPE_CHECKING
 from experta import Rule, MATCH, NOT, OR, TEST, KnowledgeEngine
 from dateutil.relativedelta import relativedelta
-from schema import Or
 
 if TYPE_CHECKING:
     _RegrasBase = KnowledgeEngine
@@ -197,7 +196,7 @@ class RegrasVip(_RegrasBase):
         """
         self.declare(Contraindicacao(
             vacina="VIP (Poliomielite)",
-            dose=Or(1, 2, 3, 4),
+            dose="Todas",
             motivo="Idade superior a 4 anos, 11 meses e 29 dias.",
             explicacao="O esquema infantil da vacina contra a poliomielite (VIP) é recomendado até os 4 anos, 11 meses e 29 dias."
         ))

@@ -2,7 +2,6 @@ import datetime
 from typing import TYPE_CHECKING
 from experta import Rule, MATCH, NOT, OR, TEST, KnowledgeEngine
 from dateutil.relativedelta import relativedelta
-from schema import Or
 
 if TYPE_CHECKING:
     _RegrasBase = KnowledgeEngine
@@ -171,7 +170,7 @@ class RegrasPneumo10(_RegrasBase):
         """
         self.declare(Contraindicacao(
             vacina="Pneumocócica 10V",
-            dose=Or(1, 2, 3, "Reforço", "Única"),
+            dose="Todas",
             motivo="Idade superior à permitida.",
             explicacao="A vacina Pneumo10 na rotina do PNI é recomendada apenas até os 4 anos, 11 meses e 29 dias."
         ))

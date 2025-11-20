@@ -1,7 +1,8 @@
-from flask import Flask
 from config import config
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, render_template
+
 
 # Instancia as extensões
 db = SQLAlchemy()
@@ -19,15 +20,18 @@ def create_app(config_name='default'):
 
     # 2. Inicializar extensões (ex: banco de dados)
     db.init_app(app)
-    migrate.init_app(app, db) # Inicializa o Migrate
+    migrate.init_app(app, db)
 
     # 3. Registrar os Blueprints (nossas rotas)
     from .api import api_bp as api_blueprint
     app.register_blueprint(api_blueprint, url_prefix='/api')
 
-    # Adicionar uma rota raiz simples para teste
     @app.route('/')
     def index():
-        return "Servidor do Sistema Especialista está no ar! Acesse /api/health para o health check."
+        return render_template('index.html')
+
+    @app.route('/health')
+    def health():
+        return "Servidor do Sistema Especialista está no ar!", 200
 
     return app
