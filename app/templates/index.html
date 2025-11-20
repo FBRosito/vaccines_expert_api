@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VacinAPI - Sistema Especialista</title>
+    <title>Sistema Especialista de Vacinas</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -17,23 +17,20 @@
                 <span>VacinAPI</span>
             </div>
             <nav>
-                <!-- Use return false para evitar recarregamento da página -->
                 <a href="#" id="nav-novo" class="active" onclick="mudarTela('novo'); return false;">
-                    <i class="ph ph-user-list"></i> Novo Atendimento
+                    <i class="ph ph-user-list"></i> <span>Novo Atendimento</span>
                 </a>
                 <a href="#" id="nav-registros" onclick="mudarTela('registros'); return false;">
-                    <i class="ph ph-table"></i> Todos Registros
+                    <i class="ph ph-table"></i> <span>Todos Registros</span>
                 </a>
             </nav>
         </aside>
 
         <main class="content">
-            
-            <!-- ABA 1: FORMULÁRIO (Padrão) -->
-            <div id="view-novo">
+            <div id="view-novo" class="view-container">
                 <header>
                     <h1>Triagem de Vacinação</h1>
-                    <p>Adicione o histórico completo para análise precisa de intervalos.</p>
+                    <p>Adicione o histórico completo para análise.</p>
                 </header>
 
                 <form id="vaccine-form" onsubmit="event.preventDefault(); analisarVacinas();">
@@ -334,9 +331,7 @@
                     </button>
                 </form>
             </div>
-
-            <!-- ABA 2: REGISTROS DE AUDITORIA (Inicialmente Oculta) -->
-            <div id="view-registros" class="hidden">
+            <div id="view-registros" class="hidden view-container">
                 <header>
                     <h1>Registros de Auditoria</h1>
                     <p>Histórico de todas as simulações realizadas e salvas no banco de dados.</p>
@@ -354,13 +349,10 @@
                             </tr>
                         </thead>
                         <tbody id="table-body">
-                            <!-- Linhas serão inseridas aqui via JavaScript -->
                         </tbody>
                     </table>
                 </div>
             </div>
-
-            <!-- Modal de Resultado (Compartilhado entre Novo e Histórico) -->
             <div id="resultado-card" class="result-modal hidden">
                 <div class="result-content">
                     <div class="result-header">
