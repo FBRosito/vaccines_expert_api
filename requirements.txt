@@ -1,0 +1,9 @@
+Flask==3.0.3
+python-dotenv==1.0.1
+experta==1.9.4
+marshmallow==3.21.3
+gunicorn==22.0.0
+python-dateutil==2.9.0
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.7
+psycopg2-binary==2.9.9
