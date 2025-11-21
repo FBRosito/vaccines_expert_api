@@ -1,8 +1,10 @@
 from flask import jsonify
 from . import api_bp
+from app import limiter
 
 from app.services.auditoria_service import AuditoriaService
 
+@limiter.limit("30 per minute")
 @api_bp.route('/auditoria', methods=['GET'])
 def obter_todos_registros():
     """

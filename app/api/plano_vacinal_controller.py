@@ -1,11 +1,12 @@
 from flask import jsonify, request
+from app import limiter
 from marshmallow import ValidationError
-from . import api_bp # Supondo que o blueprint seja definido em app/api/__init__.py
+from . import api_bp
 
-# Importe o novo schema e o serviço
 from app.schemas.plano_vacinal_schema import PlanoVacinalInputSchema
 from app.services.plano_vacinal_service import PlanoVacinalService
 
+@limiter.limit("10 per minute")
 @api_bp.route('/simulador/plano-vacinal', methods=['POST'])
 def obter_plano_vacinal():
     """
