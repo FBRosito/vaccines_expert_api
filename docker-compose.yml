@@ -1,7 +1,9 @@
 services:
   # --- Serviço da API (Aplicação Flask) ---
   api:
-    build: .
+    build: 
+      context: .
+      network: host
     ports:
       - "8000:5000"
     volumes:
