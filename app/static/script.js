@@ -19,7 +19,7 @@ const vaccineConfig = {
     'covid': { apiCode: 'COVID19', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }] }
 };
 
-// --- NAVEGAÇÃO SPA (CONTROLE DE ABAS) ---
+// --- NAVEGAÇÃO SPA ---
 function mudarTela(tela) {
     const viewNovo = document.getElementById('view-novo');
     const viewRegistros = document.getElementById('view-registros');
@@ -27,59 +27,59 @@ function mudarTela(tela) {
     const navRegistros = document.getElementById('nav-registros');
 
     if (tela === 'novo') {
-        // Mostra tela de Novo, esconde Registros
         viewNovo.classList.remove('hidden');
         viewRegistros.classList.add('hidden');
         navNovo.classList.add('active');
         navRegistros.classList.remove('active');
     } else {
-        // Mostra tela de Registros, esconde Novo
         viewNovo.classList.add('hidden');
         viewRegistros.classList.remove('hidden');
         navNovo.classList.remove('active');
         navRegistros.classList.add('active');
-        
-        // AQUI ESTÁ A MÁGICA: Carrega os dados apenas ao entrar nesta tela
         carregarRegistros();
     }
 }
 
-// --- LISTAGEM DE REGISTROS (GET /api/auditoria) ---
+// --- LISTAGEM DE REGISTROS ---
 async function carregarRegistros() {
     const tbody = document.getElementById('table-body');
     
-    // Feedback visual enquanto carrega
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-muted);"><i class="ph ph-spinner ph-spin"></i> Carregando auditoria...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-muted);"><i class="ph ph-spinner ph-spin"></i> Carregando histórico...</td></tr>';
 
     try {
-        const response = await fetch('/api/auditoria');
+        const response = await fetch('/api/registros');
+        
+        if (!response.ok) {
+            const erroJson = await response.json().catch(() => ({}));
+            throw new Error(erroJson.erro || erroJson.error || `Erro do servidor (${response.status})`);
+        }
+
         const registros = await response.json();
 
-        tbody.innerHTML = ''; // Limpa o loading
+        if (!Array.isArray(registros)) {
+            throw new Error("Formato de resposta inválido recebido da API.");
+        }
+
+        tbody.innerHTML = '';
 
         if (registros.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">Nenhum registro de auditoria encontrado.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 30px; color: var(--text-muted);"><i>Nenhum registro de auditoria encontrado no banco de dados.</i></td></tr>';
             return;
         }
 
         registros.forEach(reg => {
-            // 1. Formata Data/Hora (Timestamp do log)
             const dataLog = new Date(reg.timestamp).toLocaleString('pt-BR', {
                 day: '2-digit', month: '2-digit', year: 'numeric', 
                 hour: '2-digit', minute: '2-digit'
             });
 
-            // 2. Formata Nascimento e Sexo
-            // Adiciona hora fixa para evitar bug de timezone (dia anterior)
             const dataNascObj = new Date(reg.paciente_data_nascimento + 'T12:00:00');
             const nascFmt = dataNascObj.toLocaleDateString('pt-BR');
             
             const sexoClass = reg.paciente_sexo === 'Masculino' ? 'M' : 'F';
             const sexoLabel = reg.paciente_sexo === 'Masculino' ? 'Masc' : 'Fem';
 
-            // 3. Prepara o JSON do resultado para o botão
-            // encodeURIComponent é essencial para colocar JSON dentro de atributo HTML
-            const resultadoJson = encodeURIComponent(JSON.stringify(reg.response_output));
+            const resultadoStr = encodeURIComponent(JSON.stringify(reg.response_output));
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -94,7 +94,7 @@ async function carregarRegistros() {
                     <div class="text-muted" style="font-size:0.75rem">vacinas informadas</div>
                 </td>
                 <td>
-                    <button class="btn-small" onclick="verDetalhes('${resultadoJson}')">
+                    <button class="btn-small" onclick="verDetalhes('${resultadoStr}')">
                         <i class="ph-bold ph-eye"></i> Ver Análise
                     </button>
                 </td>
@@ -104,22 +104,21 @@ async function carregarRegistros() {
 
     } catch (error) {
         console.error("Erro ao buscar registros:", error);
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--danger); padding: 20px;">Erro ao carregar dados do servidor.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--danger); padding: 20px;"><i class="ph-bold ph-warning-circle"></i> ${error.message}</td></tr>`;
     }
 }
 
-// Função auxiliar para abrir o modal com dados históricos
 function verDetalhes(resultadoEncoded) {
     try {
         const resultado = JSON.parse(decodeURIComponent(resultadoEncoded));
-        mostrarResultado(resultado); // Reutiliza a função de exibição do modal
+        mostrarResultado(resultado);
     } catch (e) {
         console.error(e);
         alert("Não foi possível abrir os detalhes deste registro.");
     }
 }
 
-// --- FUNÇÕES DE FORMULÁRIO (ADD DOSE / TOGGLE) ---
+// --- FUNÇÕES DE FORMULÁRIO ---
 document.querySelectorAll('.vaccine-check').forEach(check => {
     check.addEventListener('change', function() {
         const vacinaId = this.id.replace('check-', '');
@@ -152,14 +151,11 @@ function addDose(vacinaId) {
     row.className = 'dose-row';
     
     const optionsHtml = config.doses.map(d => 
-        `<option value="${d.value}">${d.label}</option>`
-    ).join('');
+        `<option value="${d.value}">${d.label}</option>`).join('');
 
     row.innerHTML = `
         <input type="date" class="input-date" required>
-        <select class="input-dose">
-            ${optionsHtml}
-        </select>
+        <select class="input-dose">${optionsHtml}</select>
         <button type="button" class="btn-remove-dose" onclick="this.parentElement.remove()" title="Remover">
             <i class="ph-bold ph-trash"></i>
         </button>
@@ -167,7 +163,6 @@ function addDose(vacinaId) {
     listContainer.appendChild(row);
 }
 
-// --- ENVIO DO FORMULÁRIO (POST) ---
 async function analisarVacinas() {
     const btn = document.getElementById('btn-analisar');
     const nascimentoInput = document.getElementById('nascimento').value;
@@ -190,9 +185,7 @@ async function analisarVacinas() {
                 let doseVal = row.querySelector('.input-dose').value;
 
                 if (dataVal) {
-                     // Converte para número se possível (API espera int para doses 1, 2, 3...)
                      if (!isNaN(doseVal)) doseVal = parseInt(doseVal);
-
                      carteiraVacinacao.push({
                         vacina_codigo: vaccineConfig[id].apiCode,
                         data_aplicacao: dataVal,
@@ -203,7 +196,6 @@ async function analisarVacinas() {
         }
     });
 
-    // Feedback Visual
     const textoOriginal = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Processando...';
@@ -220,24 +212,23 @@ async function analisarVacinas() {
             body: JSON.stringify(payload)
         });
 
-        const data = await response.json();
-
-        if (response.ok) {
-            mostrarResultado(data);
-        } else {
-            alert("Erro do servidor: " + (data.erro || "Desconhecido"));
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.erro || err.error || "Erro desconhecido no servidor");
         }
+
+        const data = await response.json();
+        mostrarResultado(data);
 
     } catch (error) {
         console.error(error);
-        alert("Erro de conexão com o servidor.");
+        alert("Erro: " + error.message);
     } finally {
         btn.disabled = false;
         btn.innerHTML = textoOriginal;
     }
 }
 
-// --- EXIBIÇÃO DO MODAL (RESULTADO) ---
 function mostrarResultado(data) {
     const modal = document.getElementById('resultado-card');
     const contentArea = modal.querySelector('.result-scroll-area');
@@ -265,7 +256,6 @@ function mostrarResultado(data) {
         return '';
     };
 
-    // Garante que as listas existam mesmo se null
     data.vacinas_recomendadas = data.vacinas_recomendadas || [];
     data.vacinas_aprazadas = data.vacinas_aprazadas || [];
     data.vacinas_contraindicadas = data.vacinas_contraindicadas || [];
