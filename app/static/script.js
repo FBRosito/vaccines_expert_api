@@ -47,7 +47,7 @@ async function carregarRegistros() {
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-muted);"><i class="ph ph-spinner ph-spin"></i> Carregando histórico...</td></tr>';
 
     try {
-        const response = await fetch('/api/registros');
+        const response = await fetch('/api/auditoria');
         
         if (!response.ok) {
             const erroJson = await response.json().catch(() => ({}));
@@ -244,7 +244,7 @@ function mostrarResultado(data) {
                             <h4>${v.vacina}</h4>
                             <div class="meta">
                                 ${v.dose ? `<span><strong>Dose:</strong> ${v.dose}</span>` : ''}
-                                ${v.data_recomendada ? `<span><strong>Data:</strong> ${new Date(v.data_recomendada).toLocaleDateString('pt-BR')}</span>` : ''}
+                                ${v.data_recomendada ? `<span><strong>Data:</strong> ${new Date(v.data_recomendada).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>` : ''}
                                 ${v.motivo ? `<span><strong>Motivo:</strong> ${v.motivo}</span>` : ''}
                             </div>
                             <p class="desc">${v.explicacao}</p>
@@ -271,7 +271,14 @@ function mostrarResultado(data) {
     }
 
     contentArea.innerHTML = htmlContent;
+
     modal.classList.remove('hidden');
+
+    setTimeout(() => {
+        if (contentArea) {
+            contentArea.scrollTop = 0;
+        }
+    }, 10);
 }
 
 function fecharModal() {

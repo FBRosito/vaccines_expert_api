@@ -349,6 +349,18 @@ input:focus, select:focus {
     cursor: pointer;
     color: var(--text-muted);
     flex-shrink: 0;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-secondary:hover {
+    border-color: var(--text-muted);
+    color: var(--text-main);
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.btn-secondary:active {
+    transform: scale(0.98);
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 /* --- TABELA RESPONSIVA --- */

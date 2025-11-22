@@ -1,6 +1,6 @@
 import datetime
 from typing import TYPE_CHECKING
-from experta import Rule, MATCH, NOT, TEST, KnowledgeEngine
+from experta import Rule, MATCH, NOT, OR, TEST, KnowledgeEngine
 from dateutil.relativedelta import relativedelta
 
 if TYPE_CHECKING:
@@ -13,7 +13,6 @@ from .fatos import Idade, DoseAplicada, RecomendacaoImediata, AgendamentoFuturo,
 class RegrasRotavirus(_RegrasBase):
     """
     Regras para o Rotavírus (VORH), com fortes restrições de idade.
-    Atualizado com lógica proativa e tipos de data corretos.
     """
 
     @Rule(
@@ -53,37 +52,40 @@ class RegrasRotavirus(_RegrasBase):
         ))
 
     @Rule(
-        DoseAplicada(vacina_codigo='VORH', dose=1, data_aplicacao=MATCH.d1), 
         Idade(dias=MATCH.dias_atuais, data_nascimento=MATCH.dn),
-        TEST(lambda dias_atuais: dias_atuais < 105),
+        TEST(lambda dias_atuais: dias_atuais <= 240),
+        OR(
+            DoseAplicada(vacina_codigo='VORH', dose=1, data_aplicacao=MATCH.d1_data),
+            AgendamentoFuturo(vacina="Rotavírus (VORH)", dose=1, data_recomendada=MATCH.d1_data)
+        ),
         NOT(DoseAplicada(vacina_codigo='VORH', dose=2)),
         NOT(AgendamentoFuturo(vacina="Rotavírus (VORH)", dose=2))
     )
-    def regra_vorh_d2_agendar(self, d1, dn):
+    def regra_vorh_d2_agendar(self, d1_data, dn):
         """
-        (Agendamento) Após D1 da VORH, agenda D2.
-        Define data mínima (D1+30d) e recomendada (D1+2m),
-        mas também respeita a data mínima de idade (105 dias).
+        (Agendamento) Após D1, agenda D2.
+        Respeita intervalos e a idade mínima da D2 (3m 15d).
         """
-        d1_data = d1.date() if isinstance(d1, datetime.datetime) else d1
+        d1_base = d1_data.date() if isinstance(d1_data, datetime.datetime) else d1_data
         dn_data = dn.date() if isinstance(dn, datetime.datetime) else dn
         
-        # Mínimos
-        data_min_int = d1_data + relativedelta(days=30)
+        data_min_int = d1_base + relativedelta(days=30)
         data_min_idade = dn_data + relativedelta(days=105)
         data_min_final = max(data_min_int, data_min_idade)
 
-        # Recomendados
-        data_rec_int = d1_data + relativedelta(months=2)
+        data_rec_int = d1_base + relativedelta(months=2)
         data_rec_idade = dn_data + relativedelta(months=4)
         data_rec_final = max(data_rec_int, data_rec_idade, data_min_final)
+        
+        data_limite = dn_data + relativedelta(months=7, days=29)
 
-        self.declare(AgendamentoFuturo(
-            vacina="Rotavírus (VORH)", dose=2,
-            data_minima=data_min_final,
-            data_recomendada=data_rec_final,
-            explicacao="A 2ª dose da VORH é agendada com intervalo mínimo de 30 dias após a 1ª dose e deve ser aplicada até os 7 meses e 29 dias de idade."
-        ))
+        if data_min_final <= data_limite:
+            self.declare(AgendamentoFuturo(
+                vacina="Rotavírus (VORH)", dose=2,
+                data_minima=data_min_final,
+                data_recomendada=data_rec_final,
+                explicacao="A 2ª dose da VORH é agendada com intervalo mínimo de 30 dias após a 1ª dose e deve ser aplicada a partir de 3 meses e 15 dias até os 7 meses e 29 dias de idade."
+            ))
 
     @Rule(
         DoseAplicada(vacina_codigo='VORH', dose=1, data_aplicacao=MATCH.d1),

@@ -17,6 +17,7 @@ from app.expert_system.regras.hepatite_a import RegrasHepatiteA
 from app.expert_system.regras.virus_vivos_atenuados import RegrasVirusVivosAtenuados
 from app.expert_system.regras.dt_adulto import RegrasDTAdulto
 from app.expert_system.regras.hpv import RegrasHPV
+from app.expert_system.regras.influenza import RegrasInfluenza
 
 from app.repositories import log_repository
 from app.repositories.models import PlanoVacinalLogModel
@@ -25,13 +26,12 @@ from app.utils.helpers import converter_datas_para_string
 
 
 class PlanoVacinalService:
-    def _montar_motor(self, data_nascimento: datetime.date) -> Optional[KnowledgeEngine]:
+    def _montar_motor(self) -> Optional[KnowledgeEngine]:
         """
         Seleciona os módulos de regras apropriados e monta uma classe de
         KnowledgeEngine dinamicamente para o paciente.
         """
         hoje = datetime.date.today()
-        idade_anos = relativedelta(hoje, data_nascimento).years
 
         modulos_de_regras = [
             RegrasBCG,
@@ -45,7 +45,8 @@ class PlanoVacinalService:
             RegrasHepatiteA,
             RegrasVirusVivosAtenuados,
             RegrasDTAdulto,
-            RegrasHPV
+            RegrasHPV,
+            RegrasInfluenza
         ]
 
         if not modulos_de_regras:
@@ -123,7 +124,7 @@ class PlanoVacinalService:
         self._paciente_dados = paciente_info
         self._carteira_dados = carteira_info
 
-        engine = self._montar_motor(paciente_info['data_nascimento'])
+        engine = self._montar_motor()
 
         if not engine:
             return {"erro": "Nenhum calendário vacinal aplicável para a idade informada."}
