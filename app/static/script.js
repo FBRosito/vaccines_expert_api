@@ -16,7 +16,8 @@ const vaccineConfig = {
     'hepa': { apiCode: 'HEPATITE_A', doses: [{ label: "Dose Única", value: 1 }] },
     'hpv': { apiCode: 'HPV', doses: [{ label: "Dose Única", value: 1 }] },
     'dt': { apiCode: 'dT', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "3ª Dose", value: 3 }, { label: "Reforço", value: "Reforço" }] },
-    'covid': { apiCode: 'COVID19', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }] }
+    'influenza': { apiCode: 'INFLUENZA', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "Dose Única/Anual", value: "Única" }] },
+    'covid': { apiCode: 'COVID19', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }] },
 };
 
 // --- NAVEGAÇÃO SPA ---

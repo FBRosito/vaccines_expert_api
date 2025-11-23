@@ -309,6 +309,26 @@
                             </div>
                         </div>
 
+                        <!-- Influenza -->
+                        <div class="vaccine-card" id="card-influenza">
+                            <div class="vaccine-header" onclick="toggleVaccine('influenza')">
+                                <div class="vaccine-title">
+                                    <input type="checkbox" id="check-influenza" class="vaccine-check">
+                                    <div class="text">
+                                        <strong>Influenza</strong>
+                                        <span>Gripe (Campanha Anual)</span>
+                                    </div>
+                                </div>
+                                <i class="ph ph-caret-down arrow"></i>
+                            </div>
+                            <div class="vaccine-details">
+                                <div class="dose-list" id="list-influenza"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('influenza')">
+                                    <i class="ph-bold ph-plus"></i> Adicionar Dose
+                                </button>
+                            </div>
+                        </div>
+
                         <!-- COVID -->
                         <div class="vaccine-card" id="card-covid">
                             <div class="vaccine-header" onclick="toggleVaccine('covid')">

@@ -120,7 +120,7 @@ class RegrasPneumo10(_RegrasBase):
             dose="Reforço",
             data_minima=data_final,
             data_recomendada=data_final,
-            explicacao="Reforço projetado para completá-lo até 12 meses de idade (60 dias após a 2ª dose)."
+            explicacao="Reforço projetado para completá-lo até 12 meses de idade, ou 60 dias após a 2ª dose."
         ))
 
     @Rule(
