@@ -329,18 +329,43 @@
                             </div>
                         </div>
 
-                        <!-- COVID -->
-                        <div class="vaccine-card" id="card-covid">
-                            <div class="vaccine-header" onclick="toggleVaccine('covid')">
+                        <!-- COVID PFIZER -->
+                        <div class="vaccine-card" id="card-covid_pfizer">
+                            <div class="vaccine-header" onclick="toggleVaccine('covid_pfizer')">
                                 <div class="vaccine-title">
-                                    <input type="checkbox" id="check-covid" class="vaccine-check">
-                                    <div class="text"><strong>COVID-19</strong></div>
+                                    <input type="checkbox" id="check-covid_pfizer" class="vaccine-check">
+                                    <div class="text">
+                                        <strong>COVID-19 (Pfizer)</strong>
+                                        <span>Esquema de 3 doses (Infantil)</span>
+                                    </div>
                                 </div>
                                 <i class="ph ph-caret-down arrow"></i>
                             </div>
                             <div class="vaccine-details">
-                                <div class="dose-list" id="list-covid"></div>
-                                <button type="button" class="btn-add-dose" onclick="addDose('covid')"><i class="ph-bold ph-plus"></i> Adicionar Dose</button>
+                                <div class="dose-list" id="list-covid_pfizer"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('covid_pfizer')">
+                                    <i class="ph-bold ph-plus"></i> Adicionar Dose
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- COVID MODERNA -->
+                        <div class="vaccine-card" id="card-covid_moderna">
+                            <div class="vaccine-header" onclick="toggleVaccine('covid_moderna')">
+                                <div class="vaccine-title">
+                                    <input type="checkbox" id="check-covid_moderna" class="vaccine-check">
+                                    <div class="text">
+                                        <strong>COVID-19 (Moderna)</strong>
+                                        <span>Esquema de 2 doses (Infantil)</span>
+                                    </div>
+                                </div>
+                                <i class="ph ph-caret-down arrow"></i>
+                            </div>
+                            <div class="vaccine-details">
+                                <div class="dose-list" id="list-covid_moderna"></div>
+                                <button type="button" class="btn-add-dose" onclick="addDose('covid_moderna')">
+                                    <i class="ph-bold ph-plus"></i> Adicionar Dose
+                                </button>
                             </div>
                         </div>
 

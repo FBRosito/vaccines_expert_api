@@ -1,4 +1,4 @@
-// --- CONFIGURAÇÃO: Opções de Dose por Vacina ---
+// --- CONFIGURAÇÕES DE VACINAS E DOSES ---
 const vaccineConfig = {
     'bcg': { apiCode: 'BCG', doses: [{ label: "Dose Única", value: 1 }] },
     'hepb': { apiCode: 'HEPATITE_B', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "3ª Dose", value: 3 }] },
@@ -9,6 +9,7 @@ const vaccineConfig = {
     'pneumo': { apiCode: 'PNEUMO10', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "Reforço", value: 3 }] },
     'meningo': { apiCode: 'MEN_C', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "Reforço", value: 3 }] },
     'meningo_acwy': { apiCode: 'MEN_ACWY', doses: [{ label: "Dose Única", value: 1 }] },
+    'influenza': { apiCode: 'INFLUENZA', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "Dose Única/Anual", value: "Única" }] },
     'fa': { apiCode: 'FEBRE_AMARELA', doses: [{ label: "1ª Dose", value: 1 }, { label: "Reforço", value: 2 }, { label: "Única", value: "Única" }] },
     'scr': { apiCode: 'SCR', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }] },
     'tetra': { apiCode: 'TETRAVIRAL', doses: [{ label: "Dose Única", value: 1 }] },
@@ -16,8 +17,25 @@ const vaccineConfig = {
     'hepa': { apiCode: 'HEPATITE_A', doses: [{ label: "Dose Única", value: 1 }] },
     'hpv': { apiCode: 'HPV', doses: [{ label: "Dose Única", value: 1 }] },
     'dt': { apiCode: 'dT', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "3ª Dose", value: 3 }, { label: "Reforço", value: "Reforço" }] },
-    'influenza': { apiCode: 'INFLUENZA', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "Dose Única/Anual", value: "Única" }] },
-    'covid': { apiCode: 'COVID19', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }] },
+    
+    // --- COVID-19 SEPARADA POR FABRICANTE ---
+    'covid_pfizer': { 
+        apiCode: 'COVID19_PFIZER', 
+        doses: [
+            { label: "1ª Dose", value: 1 }, 
+            { label: "2ª Dose", value: 2 }, 
+            { label: "3ª Dose", value: 3 },
+            { label: "Reforço/Anual", value: "Reforço Periódico" }
+        ] 
+    },
+    'covid_moderna': { 
+        apiCode: 'COVID19_MODERNA', 
+        doses: [
+            { label: "1ª Dose", value: 1 }, 
+            { label: "2ª Dose", value: 2 },
+            { label: "Reforço/Anual", value: "Reforço Periódico" }
+        ] 
+    }
 };
 
 // --- NAVEGAÇÃO SPA ---
@@ -169,10 +187,39 @@ async function analisarVacinas() {
     const nascimentoInput = document.getElementById('nascimento').value;
     const sexoInput = document.getElementById('sexo').value;
 
+    // Validação de Campos Obrigatórios
     if (!nascimentoInput || !sexoInput) {
         alert("Por favor, preencha os dados obrigatórios (Nascimento e Sexo).");
         return;
     }
+
+    const dataNascimento = new Date(nascimentoInput + 'T00:00:00');
+    const hoje = new Date();
+    
+    // Zera as horas de hoje para comparar apenas as datas
+    hoje.setHours(0, 0, 0, 0);
+
+    // A. Data Futura
+    if (dataNascimento > hoje) {
+        alert("Data de nascimento inválida: A data não pode ser no futuro.");
+        return;
+    }
+
+    // B. Idade Irreal (ex: > 130 anos)
+    const diffAnos = hoje.getFullYear() - dataNascimento.getFullYear();
+
+    // Se ainda não fez aniversário este ano
+    const aniversarioPassou = (
+        hoje.getMonth() > dataNascimento.getMonth() || 
+        (hoje.getMonth() === dataNascimento.getMonth() && hoje.getDate() >= dataNascimento.getDate())
+    );
+    const idadeReal = aniversarioPassou ? diffAnos : diffAnos - 1;
+
+    if (idadeReal > 130) {
+        alert(`Data de nascimento inválida: A idade calculada (${idadeReal} anos) excede o limite aceitável.`);
+        return;
+    }
+    // -------------------------------------
 
     const sexoMapeado = sexoInput === 'M' ? 'Masculino' : 'Feminino';
     const carteiraVacinacao = [];
@@ -186,6 +233,11 @@ async function analisarVacinas() {
                 let doseVal = row.querySelector('.input-dose').value;
 
                 if (dataVal) {
+                     const dataVacina = new Date(dataVal + 'T00:00:00');
+                     if (dataVacina > new Date()) {
+                         console.warn(`Atenção: Vacina ${id} com data futura.`);
+                     }
+
                      if (!isNaN(doseVal)) doseVal = parseInt(doseVal);
                      carteiraVacinacao.push({
                         vacina_codigo: vaccineConfig[id].apiCode,
