@@ -1,7 +1,7 @@
 from datetime import date
-from marshmallow import Schema, fields, validate, ValidationError
+from marshmallow import Schema, fields, validate, ValidationError, pre_load
 
-# --- FUNÇÕES DE VALIDAÇÃO CUSTOMIZADAS ---
+# --- FUNÇÕES DE VALIDAÇÃO ---
 
 def validate_not_future(value):
     """Valida se a data fornecida não é futura."""
@@ -9,75 +9,97 @@ def validate_not_future(value):
         raise ValidationError("A data não pode ser no futuro.")
 
 def validate_reasonable_age(value):
-    """
-    Valida se a data de nascimento não resulta em uma idade irreal (> 130 anos).
-    """
+    """Valida idade > 130 anos."""
     today = date.today()
     age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
-    
     if age > 130:
-        raise ValidationError(f"Data inválida. A idade calculada ({age} anos) excede o limite máximo permitido.")
+        raise ValidationError(f"Data de nascimento inválida. Idade ({age} anos) excede o limite.")
 
-def _raise_error_dose():
-    raise ValidationError("O campo 'dose' deve ser um número inteiro positivo (>= 1) ou a string 'Única'.")
+# --- SUB-SCHEMAS DO FHIR ---
 
-# --- SCHEMAS ---
+class CodingSchema(Schema):
+    """
+    Estrutura: vaccineCode.coding[].
+    Representa o código da vacina (ex: CVX, SNOMED ou Proprietário).
+    """
+    system = fields.Str()
+    code = fields.Str(required=True)
+    display = fields.Str()
 
-class PacienteSchema(Schema):
-    """Schema para validar os dados do paciente."""
-    data_nascimento = fields.Date(
-        required=True,
-        error_messages={
-            "required": "A data de nascimento é obrigatória.", 
-            "invalid": "Formato de data inválido. Use AAAA-MM-DD."
-        },
-        validate=[validate_not_future, validate_reasonable_age]
-    )
-    sexo = fields.Str(
-        required=True,
-        validate=validate.OneOf(["Masculino", "Feminino", "Outro"]),
-        error_messages={"required": "O sexo é obrigatório."}
-    )
+class VaccineCodeSchema(Schema):
+    """Estrutura: resource.vaccineCode"""
+    coding = fields.List(fields.Nested(CodingSchema), required=True)
 
-class DoseAplicadaSchema(Schema):
-    """Schema para validar cada dose de vacina na carteira."""
-    vacina_codigo = fields.Str(
-        required=True,
-        error_messages={"required": "O código da vacina é obrigatório."}
+class ProtocolAppliedSchema(Schema):
+    """
+    Estrutura: resource.protocolApplied[].
+    Onde fica o número da dose no FHIR.
+    """
+    doseNumberPositiveInt = fields.Int()
+    doseNumberString = fields.Str()
+
+class FHIRPatientResourceSchema(Schema):
+    """
+    Recurso: Patient
+    """
+    resourceType = fields.Str(validate=validate.Equal("Patient"), required=True)
+    birthDate = fields.Date(
+        required=True, 
+        validate=[validate_not_future, validate_reasonable_age],
+        error_messages={"invalid": "Formato de data inválido. Use YYYY-MM-DD."}
     )
-    data_aplicacao = fields.Date(
+    gender = fields.Str(
         required=True,
-        error_messages={
-            "required": "A data de aplicação é obrigatória.", 
-            "invalid": "Formato de data inválido. Use AAAA-MM-DD."
-        },
-        validate=[validate_not_future]
-    )
-    dose = fields.Field(
-        required=True,
-        validate=[
-            lambda d: (
-                isinstance(d, int) and d >= 1
-            ) or (
-                isinstance(d, str) and d.lower() in ["única", "unica", "ref", "reforço", "reforco", "1º reforço", "2º reforço", "ref 1", "ref 2", "ref 10 anos"]
-            ) or (
-                _raise_error_dose()
-            )
-        ],
-        error_messages={
-            "required": "O número/descrição da dose é obrigatório.",
-        }
+        validate=validate.OneOf(["male", "female", "other", "unknown"]),
+        error_messages={"validator_failed": "Gênero deve ser 'male', 'female', 'other' ou 'unknown'."}
     )
 
-class PlanoVacinalInputSchema(Schema):
-    """Schema principal para validar a entrada do simulador de plano vacinal."""
-    paciente = fields.Nested(
-        PacienteSchema,
+class FHIRImmunizationResourceSchema(Schema):
+    """
+    Recurso: Immunization
+    """
+    resourceType = fields.Str(validate=validate.Equal("Immunization"), required=True)
+    status = fields.Str(validate=validate.Equal("completed"), missing="completed")
+    
+    vaccineCode = fields.Nested(VaccineCodeSchema, required=True)
+    
+    occurrenceDateTime = fields.Date(
         required=True,
-        error_messages={"required": "Os dados do paciente são obrigatórios."}
+        validate=[validate_not_future],
+        attribute="occurrenceDateTime"
     )
-    carteira_vacinacao = fields.Nested(
-        DoseAplicadaSchema,
-        many=True,
-        required=False
-    )
+    
+    protocolApplied = fields.List(fields.Nested(ProtocolAppliedSchema), required=True)
+
+class EntryResourceSchema(Schema):
+    """
+    Um item dentro do Bundle.entry.
+    Pode conter um Patient ou uma Immunization.
+    """
+    resource = fields.Dict(required=True)
+
+    @pre_load
+    def validate_resource_type(self, data, **kwargs):
+        resource = data.get('resource', {})
+        res_type = resource.get('resourceType')
+        
+        if res_type == 'Patient':
+            schema = FHIRPatientResourceSchema()
+            errors = schema.validate(resource)
+            if errors: raise ValidationError(errors, field_name="resource (Patient)")
+        elif res_type == 'Immunization':
+            schema = FHIRImmunizationResourceSchema()
+            errors = schema.validate(resource)
+            if errors: raise ValidationError(errors, field_name="resource (Immunization)")
+        else:
+            pass 
+        return data
+
+class FHIRBundleSchema(Schema):
+    """
+    Schema Principal: Bundle FHIR.
+    A API espera receber este objeto.
+    """
+    resourceType = fields.Str(validate=validate.Equal("Bundle"), required=True)
+    type = fields.Str(validate=validate.OneOf(["collection", "transaction", "document"]), missing="collection")
+    entry = fields.List(fields.Nested(EntryResourceSchema), required=True)

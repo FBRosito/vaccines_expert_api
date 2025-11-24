@@ -12,7 +12,7 @@ from .fatos import Idade, DoseAplicada, RecomendacaoImediata, AgendamentoFuturo,
 
 class RegrasHPV(_RegrasBase):
     """
-    Regras para a vacina HPV4 (Papilomavírus Humano).
+    Regras para a vacina HPV (Papilomavírus Humano).
     Cobre o esquema de dose única para a população geral (9-19 anos).
     """
 
@@ -34,7 +34,7 @@ class RegrasHPV(_RegrasBase):
         data_alvo = dn_data + relativedelta(years=9)
         
         self.declare(AgendamentoFuturo(
-            vacina="HPV4", 
+            vacina="HPV", 
             dose="Única",
             data_minima=data_alvo,
             data_recomendada=data_alvo,
@@ -52,12 +52,12 @@ class RegrasHPV(_RegrasBase):
         recomenda a aplicação da dose única.
         """
         explicacao = (
-            f"Paciente com {a} anos. Recomenda-se a dose única da vacina HPV4."
+            f"Paciente com {a} anos. Recomenda-se a dose única da vacina HPV."
             if a < 15
-            else f"Paciente com {a} anos. Recomenda-se resgate com dose única da vacina HPV4."
+            else f"Paciente com {a} anos. Recomenda-se resgate com dose única da vacina HPV."
         )
         self.declare(RecomendacaoImediata(
-            vacina="HPV4",
+            vacina="HPV",
             dose="Única",
             explicacao=explicacao
         ))
@@ -75,7 +75,7 @@ class RegrasHPV(_RegrasBase):
         considera o esquema de dose única finalizado.
         """
         self.declare(EsquemaCompleto(
-            vacina="HPV4",
+            vacina="HPV",
             explicacao="Esquema de dose única finalizado.",
             data_ultima_dose=data_dose.date() if isinstance(data_dose, datetime.datetime) else data_dose
         ))
@@ -91,8 +91,8 @@ class RegrasHPV(_RegrasBase):
         contraindica a vacina na rotina do PNI.
         """
         self.declare(Contraindicacao(
-            vacina="HPV4",
+            vacina="HPV",
             dose="Única",
             motivo="Idade superior à permitida.",
-            explicacao="A vacina HPV4 na rotina do PNI é recomendada apenas até os 19 anos, 11 meses e 29 dias."
+            explicacao="A vacina HPV na rotina do PNI é recomendada apenas até os 19 anos, 11 meses e 29 dias."
         ))

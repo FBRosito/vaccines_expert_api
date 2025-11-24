@@ -1,26 +1,80 @@
-// --- CONFIGURAÇÕES DE VACINAS E DOSES ---
+// --- Dados e Doses por Vacina (Padrão RNDS/SIPNI) ---
+// Códigos baseados na Tabela de Imunobiológicos do SIPNI/DataSUS
+// URI do Sistema: http://www.saude.gov.br/fhir/rnds/CodeSystem/br-imunobiologico
+
 const vaccineConfig = {
-    'bcg': { apiCode: 'BCG', doses: [{ label: "Dose Única", value: 1 }] },
-    'hepb': { apiCode: 'HEPATITE_B', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "3ª Dose", value: 3 }] },
-    'penta': { apiCode: 'PENTA', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "3ª Dose", value: 3 }] },
-    'dtp': { apiCode: 'DTP', doses: [{ label: "1º Reforço", value: 1 }, { label: "2ª Dose", value: 2 }] },
-    'vip': { apiCode: 'VIP', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "3ª Dose", value: 3 }, { label: "Reforço", value: 4 }] },
-    'rota': { apiCode: 'VORH', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }] },
-    'pneumo': { apiCode: 'PNEUMO10', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "Reforço", value: 3 }] },
-    'meningo': { apiCode: 'MEN_C', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "Reforço", value: 3 }] },
-    'meningo_acwy': { apiCode: 'MEN_ACWY', doses: [{ label: "Dose Única", value: 1 }] },
-    'influenza': { apiCode: 'INFLUENZA', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "Dose Única/Anual", value: "Única" }] },
-    'fa': { apiCode: 'FEBRE_AMARELA', doses: [{ label: "1ª Dose", value: 1 }, { label: "Reforço", value: 2 }, { label: "Única", value: "Única" }] },
-    'scr': { apiCode: 'SCR', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }] },
-    'tetra': { apiCode: 'TETRAVIRAL', doses: [{ label: "Dose Única", value: 1 }] },
-    'varicela': { apiCode: 'VARICELA', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }] },
-    'hepa': { apiCode: 'HEPATITE_A', doses: [{ label: "Dose Única", value: 1 }] },
-    'hpv': { apiCode: 'HPV', doses: [{ label: "Dose Única", value: 1 }] },
-    'dt': { apiCode: 'dT', doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "3ª Dose", value: 3 }, { label: "Reforço", value: "Reforço" }] },
+    'bcg': { 
+        apiCode: '01', // BCG
+        doses: [{ label: "Dose Única", value: 1 }] 
+    },
+    'hepb': { 
+        apiCode: '06', // Hepatite B
+        doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "3ª Dose", value: 3 }] 
+    },
+    'penta': { 
+        apiCode: '42', // Pentavalente (DTP/HB/Hib)
+        doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "3ª Dose", value: 3 }] 
+    },
+    'dtp': { 
+        apiCode: '14', // DTP
+        doses: [{ label: "1º Reforço", value: 1 }, { label: "2ª Dose", value: 2 }] 
+    },
+    'vip': { 
+        apiCode: '22', // VIP (Poliomielite Inativada)
+        doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "3ª Dose", value: 3 }, { label: "Reforço", value: 4 }] 
+    },
+    'rota': { 
+        apiCode: '41', // Rotavírus Humano
+        doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }] 
+    },
+    'pneumo': { 
+        apiCode: '17', // Pneumocócica 10V
+        doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "Reforço", value: 3 }] 
+    },
+    'meningo': { 
+        apiCode: '29', // Meningocócica C
+        doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "Reforço", value: 3 }] 
+    },
+    'meningo_acwy': { 
+        apiCode: '54', // Meningocócica ACWY
+        doses: [{ label: "Dose Única", value: 1 }] 
+    },
+    'influenza': { 
+        apiCode: '33', // Influenza (Geral)
+        doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "Dose Única/Anual", value: "Única" }] 
+    },
+    'fa': { 
+        apiCode: '05', // Febre Amarela
+        doses: [{ label: "1ª Dose", value: 1 }, { label: "Reforço", value: 2 }, { label: "Única", value: "Única" }] 
+    },
+    'scr': { 
+        apiCode: '21', // Tríplice Viral (SCR)
+        doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }] 
+    },
+    'tetra': { 
+        apiCode: '30', // Tetraviral (SCRV)
+        doses: [{ label: "Dose Única", value: 1 }] 
+    },
+    'varicela': { 
+        apiCode: '13', // Varicela
+        doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }] 
+    },
+    'hepa': { 
+        apiCode: '15', // Hepatite A
+        doses: [{ label: "Dose Única", value: 1 }] 
+    },
+    'hpv': { 
+        apiCode: '49', // HPV Quadrivalente
+        doses: [{ label: "Dose Única", value: 1 }] 
+    },
+    'dt': { 
+        apiCode: '37', // Dupla Adulto (dT)
+        doses: [{ label: "1ª Dose", value: 1 }, { label: "2ª Dose", value: 2 }, { label: "3ª Dose", value: 3 }, { label: "Reforço", value: "Reforço" }] 
+    },
     
-    // --- COVID-19 SEPARADA POR FABRICANTE ---
+    // --- COVID-19 (Códigos SIPNI Específicos) ---
     'covid_pfizer': { 
-        apiCode: 'COVID19_PFIZER', 
+        apiCode: '103', // Comirnaty Pediátrica (6m a 4 anos)
         doses: [
             { label: "1ª Dose", value: 1 }, 
             { label: "2ª Dose", value: 2 }, 
@@ -29,7 +83,7 @@ const vaccineConfig = {
         ] 
     },
     'covid_moderna': { 
-        apiCode: 'COVID19_MODERNA', 
+        apiCode: '107', // Spikevax (6m a 5 anos) - Código estimado/recente
         doses: [
             { label: "1ª Dose", value: 1 }, 
             { label: "2ª Dose", value: 2 },
@@ -127,14 +181,91 @@ async function carregarRegistros() {
     }
 }
 
+// --- VISUALIZAÇÃO DE DETALHES ---
 function verDetalhes(resultadoEncoded) {
     try {
-        const resultado = JSON.parse(decodeURIComponent(resultadoEncoded));
-        mostrarResultado(resultado);
+        const fhirBundle = JSON.parse(decodeURIComponent(resultadoEncoded));
+        
+        // Converte o padrão FHIR para o objeto visual que o 'mostrarResultado' espera
+        const dadosUI = adaptarRespostaFHIR(fhirBundle);
+        
+        mostrarResultado(dadosUI);
+
     } catch (e) {
         console.error(e);
-        alert("Não foi possível abrir os detalhes deste registro.");
+        alert("Não foi possível processar os dados FHIR deste registro.");
     }
+}
+
+// --- ADAPTADOR FHIR (RNDS) -> UI ---
+// Converte o Bundle FHIR complexo para o formato simples que a UI espera
+function adaptarRespostaFHIR(bundle) {
+    const resultado = {
+        vacinas_recomendadas: [],
+        vacinas_aprazadas: [],
+        vacinas_contraindicadas: [],
+        vacinas_em_dia: []
+    };
+
+    if (!bundle || !bundle.entry) return resultado;
+
+    const hoje = new Date();
+    const hojeStr = hoje.toLocaleDateString('en-CA');
+
+    bundle.entry.forEach(item => {
+        const res = item.resource;
+        
+        if (res.resourceType === 'ImmunizationRecommendation') {
+            const rec = res.recommendation[0];
+            const status = rec.forecastStatus.coding[0].code; // 'due', 'contraindicated', 'complete'
+            
+            const vacinaNome = rec.vaccineCode.coding[0].display;
+            const dose = rec.doseNumberString;
+            const explicacao = rec.description;
+
+            let dataRecomendada = null;
+            let dataMinima = null;
+
+            if (rec.dateCriterion) {
+                rec.dateCriterion.forEach(c => {
+                    const code = c.code.coding[0].code;
+                    if (code === '30980-7') dataRecomendada = c.value;
+                    if (code === '30981-5') dataMinima = c.value;
+                });
+            }
+
+            const objUI = {
+                vacina: vacinaNome,
+                dose: dose,
+                explicacao: explicacao,
+                data_recomendada: dataRecomendada,
+                data_minima: dataMinima,
+                motivo: explicacao
+            };
+
+            if (status === 'due') {
+                // Se 'due' (pendente), verificamos a data para separar em "Agora" ou "Futuro"
+                if (dataRecomendada && dataRecomendada <= hojeStr) {
+                    resultado.vacinas_recomendadas.push(objUI);
+                } else {
+                    resultado.vacinas_aprazadas.push(objUI);
+                }
+            } else if (status === 'contraindicated') {
+                resultado.vacinas_contraindicadas.push(objUI);
+            } else if (status === 'complete') {
+                resultado.vacinas_em_dia.push(objUI);
+            }
+        }
+    });
+
+    // Ordena as aprazadas por data
+    resultado.vacinas_aprazadas.sort((a, b) => {
+        if (a.data_recomendada < b.data_recomendada) return -1;
+        if (a.data_recomendada > b.data_recomendada) return 1;
+        return 0;
+    });
+
+    return resultado;
 }
 
 // --- FUNÇÕES DE FORMULÁRIO ---
@@ -187,7 +318,6 @@ async function analisarVacinas() {
     const nascimentoInput = document.getElementById('nascimento').value;
     const sexoInput = document.getElementById('sexo').value;
 
-    // Validação de Campos Obrigatórios
     if (!nascimentoInput || !sexoInput) {
         alert("Por favor, preencha os dados obrigatórios (Nascimento e Sexo).");
         return;
@@ -195,20 +325,14 @@ async function analisarVacinas() {
 
     const dataNascimento = new Date(nascimentoInput + 'T00:00:00');
     const hoje = new Date();
-    
-    // Zera as horas de hoje para comparar apenas as datas
     hoje.setHours(0, 0, 0, 0);
 
-    // A. Data Futura
     if (dataNascimento > hoje) {
         alert("Data de nascimento inválida: A data não pode ser no futuro.");
         return;
     }
 
-    // B. Idade Irreal (ex: > 130 anos)
     const diffAnos = hoje.getFullYear() - dataNascimento.getFullYear();
-
-    // Se ainda não fez aniversário este ano
     const aniversarioPassou = (
         hoje.getMonth() > dataNascimento.getMonth() || 
         (hoje.getMonth() === dataNascimento.getMonth() && hoje.getDate() >= dataNascimento.getDate())
@@ -219,11 +343,27 @@ async function analisarVacinas() {
         alert(`Data de nascimento inválida: A idade calculada (${idadeReal} anos) excede o limite aceitável.`);
         return;
     }
-    // -------------------------------------
 
-    const sexoMapeado = sexoInput === 'M' ? 'Masculino' : 'Feminino';
-    const carteiraVacinacao = [];
+    // --- CONSTRUÇÃO DO PAYLOAD FHIR (BUNDLE) ---
     
+    const fhirGender = sexoInput === 'M' ? 'male' : 'female';
+
+    const fhirBundle = {
+        resourceType: "Bundle",
+        type: "collection",
+        entry: []
+    };
+
+    // 1. Adicionar Recurso PACIENTE
+    fhirBundle.entry.push({
+        resource: {
+            resourceType: "Patient",
+            gender: fhirGender,
+            birthDate: nascimentoInput
+        }
+    });
+
+    // 2. Adicionar Recursos IMMUNIZATION (Vacinas)
     Object.keys(vaccineConfig).forEach(id => {
         const checkbox = document.getElementById(`check-${id}`);
         if (checkbox && checkbox.checked) {
@@ -233,49 +373,70 @@ async function analisarVacinas() {
                 let doseVal = row.querySelector('.input-dose').value;
 
                 if (dataVal) {
-                     const dataVacina = new Date(dataVal + 'T00:00:00');
-                     if (dataVacina > new Date()) {
-                         console.warn(`Atenção: Vacina ${id} com data futura.`);
-                     }
+                    if (!isNaN(doseVal)) doseVal = parseInt(doseVal);
 
-                     if (!isNaN(doseVal)) doseVal = parseInt(doseVal);
-                     carteiraVacinacao.push({
-                        vacina_codigo: vaccineConfig[id].apiCode,
-                        data_aplicacao: dataVal,
-                        dose: doseVal
+                    const immunizationResource = {
+                        resourceType: "Immunization",
+                        status: "completed",
+                        vaccineCode: {
+                            coding: [{
+                                system: "http://www.saude.gov.br/fhir/rnds/CodeSystem/br-imunobiologico", 
+                                code: vaccineConfig[id].apiCode,
+                                display: id.toUpperCase().replace('_', ' ')
+                            }]
+                        },
+                        occurrenceDateTime: dataVal,
+                        protocolApplied: []
+                    };
+
+                    if (typeof doseVal === 'number') {
+                        immunizationResource.protocolApplied.push({
+                            doseNumberPositiveInt: doseVal
+                        });
+                    } else {
+                        immunizationResource.protocolApplied.push({
+                            doseNumberString: doseVal
+                        });
+                    }
+
+                    fhirBundle.entry.push({
+                        resource: immunizationResource
                     });
                 }
             });
         }
     });
 
+    // --- ENVIO DO PAYLOAD ---
+
     const textoOriginal = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Processando...';
 
     try {
-        const payload = {
-            paciente: { data_nascimento: nascimentoInput, sexo: sexoMapeado },
-            carteira_vacinacao: carteiraVacinacao
-        };
-
         const response = await fetch('/api/simulador/plano-vacinal', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(fhirBundle) // Envia Bundle FHIR
         });
 
         if (!response.ok) {
             const err = await response.json();
-            throw new Error(err.erro || err.error || "Erro desconhecido no servidor");
+            let msgErro = err.erros;
+            if (typeof msgErro === 'object') {
+                msgErro = JSON.stringify(msgErro, null, 2);
+            }
+            throw new Error(msgErro || "Erro desconhecido no servidor");
         }
 
-        const data = await response.json();
-        mostrarResultado(data);
+        const bundleResposta = await response.json(); // Recebe Bundle FHIR
+        const dadosParaTela = adaptarRespostaFHIR(bundleResposta);
+        
+        mostrarResultado(dadosParaTela);
 
     } catch (error) {
         console.error(error);
-        alert("Erro: " + error.message);
+        alert("Erro na Análise: " + error.message);
     } finally {
         btn.disabled = false;
         btn.innerHTML = textoOriginal;
