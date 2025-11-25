@@ -209,8 +209,9 @@ function adaptarRespostaFHIR(bundle) {
 
     if (!bundle || !bundle.entry) return resultado;
 
+    // Data de hoje para comparação (Formato YYYY-MM-DD para string comparison)
     const hoje = new Date();
-    const hojeStr = hoje.toLocaleDateString('en-CA');
+    const hojeStr = hoje.toLocaleDateString('en-CA'); // Retorna YYYY-MM-DD
 
     bundle.entry.forEach(item => {
         const res = item.resource;
@@ -229,8 +230,8 @@ function adaptarRespostaFHIR(bundle) {
             if (rec.dateCriterion) {
                 rec.dateCriterion.forEach(c => {
                     const code = c.code.coding[0].code;
-                    if (code === '30980-7') dataRecomendada = c.value;
-                    if (code === '30981-5') dataMinima = c.value;
+                    if (code === '30980-7') dataRecomendada = c.value; // Date forecast
+                    if (code === '30981-5') dataMinima = c.value;   // Earliest date
                 });
             }
 
@@ -239,8 +240,7 @@ function adaptarRespostaFHIR(bundle) {
                 dose: dose,
                 explicacao: explicacao,
                 data_recomendada: dataRecomendada,
-                data_minima: dataMinima,
-                motivo: explicacao
+                data_minima: dataMinima
             };
 
             if (status === 'due') {
@@ -318,11 +318,13 @@ async function analisarVacinas() {
     const nascimentoInput = document.getElementById('nascimento').value;
     const sexoInput = document.getElementById('sexo').value;
 
+    // 1. Validação de Campos Obrigatórios
     if (!nascimentoInput || !sexoInput) {
         alert("Por favor, preencha os dados obrigatórios (Nascimento e Sexo).");
         return;
     }
 
+    // 2. Validação de Datas e Idade
     const dataNascimento = new Date(nascimentoInput + 'T00:00:00');
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
@@ -354,7 +356,6 @@ async function analisarVacinas() {
         entry: []
     };
 
-    // 1. Adicionar Recurso PACIENTE
     fhirBundle.entry.push({
         resource: {
             resourceType: "Patient",
@@ -363,7 +364,6 @@ async function analisarVacinas() {
         }
     });
 
-    // 2. Adicionar Recursos IMMUNIZATION (Vacinas)
     Object.keys(vaccineConfig).forEach(id => {
         const checkbox = document.getElementById(`check-${id}`);
         if (checkbox && checkbox.checked) {
@@ -430,6 +430,8 @@ async function analisarVacinas() {
         }
 
         const bundleResposta = await response.json(); // Recebe Bundle FHIR
+        
+        // --- ADAPTAÇÃO FHIR PARA TELA ---
         const dadosParaTela = adaptarRespostaFHIR(bundleResposta);
         
         mostrarResultado(dadosParaTela);
@@ -459,9 +461,8 @@ function mostrarResultado(data) {
                             <div class="meta">
                                 ${v.dose ? `<span><strong>Dose:</strong> ${v.dose}</span>` : ''}
                                 ${v.data_recomendada ? `<span><strong>Data:</strong> ${new Date(v.data_recomendada).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>` : ''}
-                                ${v.motivo ? `<span><strong>Motivo:</strong> ${v.motivo}</span>` : ''}
+                                ${v.explicacao ? `<span><strong>Motivo:</strong> ${v.explicacao}</span>` : ''}
                             </div>
-                            <p class="desc">${v.explicacao}</p>
                         </div>
                     `).join('')}
                 </div>
