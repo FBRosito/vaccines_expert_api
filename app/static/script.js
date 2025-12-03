@@ -133,6 +133,8 @@ async function carregarRegistros() {
             throw new Error("Formato de resposta inválido recebido da API.");
         }
 
+        registros.sort((a, b) => b.id - a.id);
+
         tbody.innerHTML = '';
 
         if (registros.length === 0) {
