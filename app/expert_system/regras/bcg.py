@@ -41,6 +41,7 @@ class RegrasBCG(_RegrasBase):
         """
         self.declare(Contraindicacao(
             vacina="BCG",
+            dose="Única",
             motivo="Idade superior a 4 anos, 11 meses e 29 dias.",
             explicacao="A vacina BCG é recomendada na rotina para crianças até 4 anos, 11 meses e 29 dias. Após essa idade, a aplicação não é mais indicada."
         ))
