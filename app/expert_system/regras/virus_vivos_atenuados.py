@@ -25,7 +25,7 @@ def is_recente(d):
 class RegrasVirusVivosAtenuados(_RegrasBase):
     """
     Contém regras para vacinas de vírus vivos atenuados que
-    conflitam entre si: Febre Amarela, SCR, Tetraviral e Varicela.
+    conflitam entre si: Febre Amarela, SCR, Varicela (e Tetraviral legado).
     """
 
     # =================================================================
@@ -48,7 +48,7 @@ class RegrasVirusVivosAtenuados(_RegrasBase):
         ))
 
     # =================================================================
-    # ESQUEMA SCR (TRÍPLICE VIRAL)
+    # ESQUEMA SCR (TRÍPLICE VIRAL) - DOSE 1 (12 MESES)
     # =================================================================
 
     @Rule(
@@ -64,12 +64,11 @@ class RegrasVirusVivosAtenuados(_RegrasBase):
             dose=1,
             data_minima=data_alvo,
             data_recomendada=data_alvo,
-            explicacao="Agendamento da primeira dose, recomendada aos 12 meses de idade."
+            explicacao="Agendamento da 1ª dose (SCR), recomendada aos 12 meses."
         ))
 
-    # RECOMENDAÇÃO SCR D1 - Dividida
+    # RECOMENDAÇÃO SCR D1
 
-    # Caso 1: Criança >= 2 anos (Sem trava de Febre Amarela)
     @Rule(
         Idade(meses=MATCH.m, anos=MATCH.a), 
         TEST(lambda a, m: a >= 2 and a < 5), 
@@ -82,7 +81,6 @@ class RegrasVirusVivosAtenuados(_RegrasBase):
             explicacao="A primeira dose da Tríplice Viral é recomendada."
         ))
 
-    # Caso 2: Criança < 2 anos (Com trava: NÃO pode ter tomado FA recente)
     @Rule(
         Idade(meses=MATCH.m, anos=MATCH.a), 
         TEST(lambda a, m: a < 2 and (a * 12 + m) >= 12),
@@ -97,16 +95,18 @@ class RegrasVirusVivosAtenuados(_RegrasBase):
         ))
     
     # =================================================================
-    # ESQUEMA TETRAVIRAL (SCR-V)
+    # ESQUEMA SCR - DOSE 2 (15 MESES)
     # =================================================================
 
+    # Caso 1: D1 Aplicada -> Agendar D2
     @Rule(
         DoseAplicada(vacina_codigo='SCR', dose=1, data_aplicacao=MATCH.d1),
         Idade(meses=MATCH.m, anos=MATCH.a, data_nascimento=MATCH.dn),
         TEST(lambda a, m: (a * 12 + m) < 15),
-        NOT(DoseAplicada(vacina_codigo='TETRAVIRAL', dose=1))
+        NOT(DoseAplicada(vacina_codigo='SCR', dose=2)),
+        NOT(DoseAplicada(vacina_codigo='TETRAVIRAL')) 
     )
-    def regra_tetra_d1_agendar_pos_scr(self, d1, dn):
+    def regra_scr_d2_agendar(self, d1, dn):
         d1_data = to_date(d1)
         dn_data = to_date(dn)
         data_rec_15m = dn_data + relativedelta(months=15)
@@ -114,50 +114,130 @@ class RegrasVirusVivosAtenuados(_RegrasBase):
         data_alvo = max(data_rec_15m, data_min_30d)
 
         self.declare(AgendamentoFuturo(
-            vacina="Tetraviral (SCR-V)", 
-            dose=1,
+            vacina="SCR (Tríplice Viral)", 
+            dose=2,
             data_minima=data_alvo,
             data_recomendada=data_alvo,
-            explicacao="Agendamento da 2ª dose de SCR (feita com Tetraviral), recomendada aos 15 meses."
+            explicacao="Agendamento da 2ª dose de SCR, recomendada aos 15 meses."
         ))
-    
-    # RECOMENDAÇÃO TETRAVIRAL - Dividida
 
-    # Caso 1: >= 2 Anos
+    # Caso 2: D1 Agendada -> Projetar D2
     @Rule(
-        DoseAplicada(vacina_codigo='SCR', dose=1, data_aplicacao=MATCH.d1_scr), 
-        Idade(meses=MATCH.m, anos=MATCH.a), 
+        AgendamentoFuturo(vacina="SCR (Tríplice Viral)", dose=1, data_recomendada=MATCH.d1_prevista),
+        Idade(data_nascimento=MATCH.dn),
+        NOT(DoseAplicada(vacina_codigo='SCR', dose=2)),
+        NOT(DoseAplicada(vacina_codigo='TETRAVIRAL')),
+        NOT(AgendamentoFuturo(vacina="SCR (Tríplice Viral)", dose=2))
+    )
+    def regra_scr_d2_projetar(self, d1_prevista, dn):
+        d1_data = to_date(d1_prevista)
+        dn_data = to_date(dn)
+        data_rec_15m = dn_data + relativedelta(months=15)
+        data_min_30d = d1_data + relativedelta(days=30)
+        data_alvo = max(data_rec_15m, data_min_30d)
+
+        self.declare(AgendamentoFuturo(
+            vacina="SCR (Tríplice Viral)", 
+            dose=2,
+            data_minima=data_alvo,
+            data_recomendada=data_alvo,
+            explicacao="Projeção da 2ª dose de SCR para os 15 meses."
+        ))
+
+    # --- RECOMENDAÇÃO SCR D2 ---
+
+    # Caso 1: Maior de 2 anos (Sem trava de FA)
+    @Rule(
+        DoseAplicada(vacina_codigo='SCR', dose=1, data_aplicacao=MATCH.d1_scr),
+        Idade(meses=MATCH.m, anos=MATCH.a),
         TEST(lambda a, m, d1_scr: 
             (a >= 2 and a < 5) and
             (datetime.date.today() >= (to_date(d1_scr) + relativedelta(days=30)))
-        ), 
-        NOT(DoseAplicada(vacina_codigo='TETRAVIRAL', dose=1))
+        ),
+        NOT(DoseAplicada(vacina_codigo='SCR', dose=2)),
+        NOT(DoseAplicada(vacina_codigo='TETRAVIRAL'))
     )
-    def regra_scrv_recomendar_maior2(self):
+    def regra_scr_d2_recomendar_maior2(self):
         self.declare(RecomendacaoImediata(
-            vacina="SCRV (Tetraviral)", dose=1, 
-            explicacao="A vacina Tetraviral (SCRV) é recomendada."
+            vacina="SCR (Tríplice Viral)", dose=2, 
+            explicacao="A 2ª dose da Tríplice Viral é recomendada."
         ))
 
-    # Caso 2: < 2 Anos (Trava FA)
+    # Caso 2: Menor de 2 anos (Trava de FA)
     @Rule(
-        DoseAplicada(vacina_codigo='SCR', dose=1, data_aplicacao=MATCH.d1_scr), 
-        Idade(meses=MATCH.m, anos=MATCH.a), 
+        DoseAplicada(vacina_codigo='SCR', dose=1, data_aplicacao=MATCH.d1_scr),
+        Idade(meses=MATCH.m, anos=MATCH.a),
         TEST(lambda a, m, d1_scr: 
             (a < 2 and (a * 12 + m) >= 15) and
             (datetime.date.today() >= (to_date(d1_scr) + relativedelta(days=30)))
-        ), 
-        NOT(DoseAplicada(vacina_codigo='TETRAVIRAL', dose=1)),
+        ),
+        NOT(DoseAplicada(vacina_codigo='SCR', dose=2)),
+        NOT(DoseAplicada(vacina_codigo='TETRAVIRAL')),
         NOT(DoseAplicada(vacina_codigo='FEBRE_AMARELA', data_aplicacao=P(is_recente)))
     )
-    def regra_scrv_recomendar_menor2(self):
+    def regra_scr_d2_recomendar_menor2(self):
         self.declare(RecomendacaoImediata(
-            vacina="SCRV (Tetraviral)", dose=1, 
-            explicacao="Aos 15 meses, é recomendada a vacina Tetraviral (SCRV)."
+            vacina="SCR (Tríplice Viral)", dose=2, 
+            explicacao="A 2ª dose da Tríplice Viral é recomendada aos 15 meses."
         ))
-    
+
     # =================================================================
-    # ESQUEMA VARICELA
+    # ESQUEMA VARICELA - DOSE 1 (15 MESES)
+    # =================================================================
+    
+    # Caso 1: Agendar por Idade (< 15 meses)
+    @Rule(
+        Idade(meses=MATCH.m, anos=MATCH.a, data_nascimento=MATCH.dn),
+        TEST(lambda a, m: (a * 12 + m) < 15),
+        NOT(DoseAplicada(vacina_codigo='VARICELA')),
+        NOT(DoseAplicada(vacina_codigo='TETRAVIRAL')),
+        NOT(AgendamentoFuturo(vacina="Varicela (atenuada)", dose=1))
+    )
+    def regra_varicela_d1_agendar_por_idade(self, dn):
+        data_15m = to_date(dn) + relativedelta(months=15)
+        self.declare(AgendamentoFuturo(
+            vacina="Varicela (atenuada)",
+            dose=1,
+            data_minima=data_15m,
+            data_recomendada=data_15m,
+            explicacao="A 1ª dose de Varicela é recomendada aos 15 meses (junto com a 2ª dose da Tríplice Viral)."
+        ))
+
+    # Caso 2: Agendar porque já tomou SCR D1
+    @Rule(
+        Idade(data_nascimento=MATCH.dn),
+        DoseAplicada(vacina_codigo='SCR', dose=1),
+        NOT(DoseAplicada(vacina_codigo='VARICELA')),
+        NOT(DoseAplicada(vacina_codigo='TETRAVIRAL')),
+        NOT(AgendamentoFuturo(vacina="Varicela (atenuada)", dose=1))
+    )
+    def regra_varicela_d1_agendar_pos_scr(self, dn):
+        data_15m = to_date(dn) + relativedelta(months=15)
+        if datetime.date.today() < data_15m:
+            self.declare(AgendamentoFuturo(
+                vacina="Varicela (atenuada)",
+                dose=1,
+                data_minima=data_15m,
+                data_recomendada=data_15m,
+                explicacao="A 1ª dose de Varicela é recomendada aos 15 meses."
+            ))
+
+    @Rule(
+        Idade(meses=MATCH.m, anos=MATCH.a),
+        TEST(lambda a, m: (a < 5 and (a * 12 + m) >= 15)),
+        NOT(DoseAplicada(vacina_codigo='VARICELA')),
+        NOT(DoseAplicada(vacina_codigo='TETRAVIRAL')),
+        NOT(DoseAplicada(vacina_codigo='SCR', data_aplicacao=P(is_recente))),
+        NOT(DoseAplicada(vacina_codigo='FEBRE_AMARELA', data_aplicacao=P(is_recente)))
+    )
+    def regra_varicela_d1_recomendar(self):
+        self.declare(RecomendacaoImediata(
+            vacina="Varicela (atenuada)", dose=1, 
+            explicacao="A 1ª dose de Varicela (monovalente) é recomendada aos 15 meses."
+        ))
+
+    # =================================================================
+    # ESQUEMA VARICELA - DOSE 2 (4 ANOS)
     # =================================================================
 
     @Rule(
@@ -187,27 +267,14 @@ class RegrasVirusVivosAtenuados(_RegrasBase):
         ),
         Idade(anos=MATCH.a),
         TEST(lambda a: a >= 4 and a < 7),
-        NOT(DoseAplicada(vacina_codigo='VARICELA', dose=2))
+        NOT(DoseAplicada(vacina_codigo='VARICELA', dose=2)),
+        NOT(DoseAplicada(vacina_codigo='FEBRE_AMARELA', data_aplicacao=P(is_recente)))
     )
     def regra_varicela_d2_recomendar_agora(self):
         self.declare(RecomendacaoImediata(
             vacina="Varicela (atenuada)",
             dose=2,
             explicacao="A segunda dose da vacina contra varicela é recomendada aos 4 anos."
-        ))
-
-    @Rule(
-        Idade(meses=MATCH.m, anos=MATCH.a),
-        TEST(lambda a, m: (a * 12 + m) < 9),
-        NOT(DoseAplicada(vacina_codigo='VARICELA')),
-        NOT(DoseAplicada(vacina_codigo='TETRAVIRAL'))
-    )
-    def contraindicacao_varicela_idade_minima(self):
-        self.declare(Contraindicacao(
-            vacina="Varicela (atenuada)",
-            dose=1,
-            motivo="Idade inferior à permitida.",
-            explicacao="A vacina Varicela (ou Tetraviral) é contraindicada para crianças menores de 9 meses."
         ))
 
     # =================================================================
@@ -281,21 +348,25 @@ class RegrasVirusVivosAtenuados(_RegrasBase):
     def regra_scr_esquema_completo(self, data_dose):
         self.declare(EsquemaCompleto(vacina="SCR (Tríplice Viral)", explicacao="Esquema de 2 doses finalizado.", data_ultima_dose=to_date(data_dose)))
     
+    @Rule(DoseAplicada(vacina_codigo='VARICELA', dose=2, data_aplicacao=MATCH.data_dose))
+    def regra_varicela_completa_2doses(self, data_dose):
+        self.declare(EsquemaCompleto(vacina="Varicela (atenuada)", explicacao="Esquema de Varicela finalizado (2 doses).", data_ultima_dose=to_date(data_dose)))
+
     @Rule(
         OR(
-            DoseAplicada(vacina_codigo='VARICELA', dose=2, data_aplicacao=MATCH.data_dose),
-            AND(
-                OR(
-                    DoseAplicada(vacina_codigo='TETRAVIRAL', dose=1, data_aplicacao=MATCH.data_dose),
-                    DoseAplicada(vacina_codigo='VARICELA', dose=1, data_aplicacao=MATCH.data_dose)
-                ),
-                Idade(anos=MATCH.a), TEST(lambda a: a >= 7)
-            )
-        )
+            DoseAplicada(vacina_codigo='TETRAVIRAL', dose=1, data_aplicacao=MATCH.data_dose),
+            DoseAplicada(vacina_codigo='VARICELA', dose=1, data_aplicacao=MATCH.data_dose)
+        ),
+        Idade(anos=MATCH.a),
+        TEST(lambda a: a >= 7),
+        NOT(DoseAplicada(vacina_codigo='VARICELA', dose=2))
     )
-    def regra_varicela_esquema_completo(self, data_dose=None):
-        data_final = to_date(data_dose) if data_dose else None
-        self.declare(EsquemaCompleto(vacina="Varicela (atenuada)", explicacao="Esquema de Varicela finalizado.", data_ultima_dose=data_final))
+    def regra_varicela_completa_idade(self, data_dose):
+        self.declare(EsquemaCompleto(
+            vacina="Varicela (atenuada)", 
+            explicacao="Esquema encerrado com 1 dose (idade > 7 anos, perdeu 2ª dose de rotina).", 
+            data_ultima_dose=to_date(data_dose)
+        ))
 
     # =================================================================
     # VACINA FEBRE AMARELA
@@ -319,7 +390,6 @@ class RegrasVirusVivosAtenuados(_RegrasBase):
 
     # RECOMENDAÇÃO FA D1 - Dividida
 
-    # Caso 1: >= 2 Anos
     @Rule(
         Idade(meses=MATCH.m, anos=MATCH.a), 
         TEST(lambda a, m: a >= 2 and a < 5), 
@@ -332,16 +402,14 @@ class RegrasVirusVivosAtenuados(_RegrasBase):
             explicacao="A primeira dose da vacina contra Febre Amarela é recomendada."
         ))
 
-    # Caso 2: < 2 Anos (Trava SCR/Tetra)
     @Rule(
         Idade(meses=MATCH.m, anos=MATCH.a), 
         TEST(lambda a, m: a < 2 and (a * 12 + m) >= 9),
         NOT(DoseAplicada(vacina_codigo='FEBRE_AMARELA', dose=1)),
         NOT(ConflitoResolvido(vacinas=P(lambda v: 'Febre Amarela' in v))),
-        NOT(OR(
-            DoseAplicada(vacina_codigo='SCR', data_aplicacao=P(is_recente)),
-            DoseAplicada(vacina_codigo='TETRAVIRAL', data_aplicacao=P(is_recente))
-        ))
+        NOT(DoseAplicada(vacina_codigo='SCR', data_aplicacao=P(is_recente))),
+        NOT(DoseAplicada(vacina_codigo='TETRAVIRAL', data_aplicacao=P(is_recente))),
+        NOT(DoseAplicada(vacina_codigo='VARICELA', data_aplicacao=P(is_recente)))
     )
     def regra_febre_amarela_d1_recomendar_menor2(self):
         self.declare(RecomendacaoImediata(
@@ -469,51 +537,53 @@ class RegrasVirusVivosAtenuados(_RegrasBase):
             explicacao='Agendada para 30 dias após a SCR (intervalo obrigatório em < 2 anos).'
         ))
 
-    # 2. PRIORIZAÇÃO: Faltam AMBAS (FA e TETRAVIRAL) -> Prioriza TETRAVIRAL
+    # 2. PRIORIZAÇÃO: Faltam AMBAS (FA e VARICELA) -> Prioriza VARICELA
     @Rule(
         Idade(anos=MATCH.a, meses=MATCH.m),
         TEST(lambda a, m: a < 2 and (a * 12 + m) >= 15),
         NOT(DoseAplicada(vacina_codigo='FEBRE_AMARELA')),
         DoseAplicada(vacina_codigo='SCR', dose=1),
-        NOT(DoseAplicada(vacina_codigo='TETRAVIRAL')),
+        NOT(DoseAplicada(vacina_codigo='VARICELA')),
         salience=100
     )
-    def regra_priorizacao_tetra_sobre_vfa(self):
-        self.declare(ConflitoResolvido(vacinas=['Tetraviral (SCR-V)', 'Febre Amarela']))
+    def regra_priorizacao_varicela_sobre_vfa(self):
+        self.declare(ConflitoResolvido(vacinas=['Varicela (atenuada)', 'Febre Amarela']))
         self.declare(RecomendacaoImediata(
-            vacina='Tetraviral (SCR-V)', dose=1,
-            explicacao='Prioridade sobre Febre Amarela em < 2 anos. Aplicar Tetraviral agora e agendar FA para 30 dias.'
+            vacina='Varicela (atenuada)', dose=1,
+            explicacao='Prioridade sobre Febre Amarela em < 2 anos. Aplicar Varicela agora e agendar FA para 30 dias.'
         ))
         data_alvo = datetime.date.today() + relativedelta(days=30)
         self.declare(AgendamentoFuturo(
             vacina='Febre Amarela', dose=1,
             data_minima=data_alvo, data_recomendada=data_alvo,
-            explicacao='Agendada para 30 dias após a Tetraviral (intervalo obrigatório em < 2 anos).'
+            explicacao='Agendada para 30 dias após a Varicela (intervalo obrigatório em < 2 anos).'
         ))
 
-    # 3. INTERVALO: FA recente -> Adiar SCR ou TETRA
+    # 3. INTERVALO: FA recente -> Adiar SCR ou VARICELA (ou TETRA)
     @Rule(
         Idade(anos=MATCH.a), TEST(lambda a: a < 2),
         DoseAplicada(vacina_codigo='FEBRE_AMARELA', data_aplicacao=MATCH.data_fa),
         TEST(lambda data_fa: 0 <= (datetime.date.today() - to_date(data_fa)).days < 30),
         OR(
             NOT(DoseAplicada(vacina_codigo='SCR')),
+            NOT(DoseAplicada(vacina_codigo='VARICELA')),
             NOT(DoseAplicada(vacina_codigo='TETRAVIRAL'))
         )
     )
     def regra_atraso_sarampo_por_fa_recente(self, data_fa):
         data_alvo = to_date(data_fa) + relativedelta(days=30)
         self.declare(AgendamentoFuturo(
-            vacina="SCR/Tetraviral", dose="Dose Pendente",
+            vacina="SCR/Varicela", dose="Dose Pendente",
             data_minima=data_alvo, data_recomendada=data_alvo,
             explicacao="Aguardar 30 dias após Febre Amarela (conflito de vírus vivo < 2 anos)."
         ))
 
-    # 4. INTERVALO: SCR ou TETRA recente -> Adiar FA
+    # 4. INTERVALO: SCR ou VARICELA recente -> Adiar FA
     @Rule(
         Idade(anos=MATCH.a), TEST(lambda a: a < 2),
         OR(
             DoseAplicada(vacina_codigo='SCR', data_aplicacao=MATCH.data_viva),
+            DoseAplicada(vacina_codigo='VARICELA', data_aplicacao=MATCH.data_viva),
             DoseAplicada(vacina_codigo='TETRAVIRAL', data_aplicacao=MATCH.data_viva)
         ),
         TEST(lambda data_viva: 0 <= (datetime.date.today() - to_date(data_viva)).days < 30),
@@ -524,14 +594,12 @@ class RegrasVirusVivosAtenuados(_RegrasBase):
         self.declare(AgendamentoFuturo(
             vacina="Febre Amarela", dose=1,
             data_minima=data_alvo, data_recomendada=data_alvo,
-            explicacao="Aguardar 30 dias após SCR/Tetraviral (conflito de vírus vivo < 2 anos)."
+            explicacao="Aguardar 30 dias após SCR/Varicela (conflito de vírus vivo < 2 anos)."
         ))
 
     # =================================================================
     # REGRAS GERAIS DE SIMULTANEIDADE (VARICELA vs OUTRAS)
     # =================================================================
-    # Aplica-se a todas as idades se não forem simultâneas.
-    # Intervalo diferenciado para Varicela (Min 15 / Rec 30).
 
     # 1. FA TOMADA RECENTEMENTE -> AGENDAR VARICELA
     @Rule(
@@ -546,7 +614,6 @@ class RegrasVirusVivosAtenuados(_RegrasBase):
         data_rec = data_fa_data + relativedelta(days=30)
         data_min_varicela = data_fa_data + relativedelta(days=15)
         
-        # Varicela (Intervalo Min 15, Rec 30)
         if not self.get_dose_aplicada('VARICELA'):
              self.declare(AgendamentoFuturo(
                 vacina="Varicela", dose=1,
@@ -555,7 +622,6 @@ class RegrasVirusVivosAtenuados(_RegrasBase):
                 explicacao="Aguardar intervalo recomendado de 30 dias (mínimo 15 dias) após a Febre Amarela."
             ))
         
-        # SCR (Mantém 30 dias se criança >= 2 anos, pois < 2 já é tratado acima)
         if a >= 2 and not self.get_dose_aplicada('SCR'):
             self.declare(AgendamentoFuturo(
                 vacina="SCR (Tríplice Viral)", dose=1,
@@ -581,7 +647,6 @@ class RegrasVirusVivosAtenuados(_RegrasBase):
         
         data_rec = data_viva + relativedelta(days=30)
         
-        # Se a vacina anterior foi Varicela, FA pode ser 15 dias (Min)
         if vacina_codigo_origem == 'VARICELA':
              data_min = data_viva + relativedelta(days=15)
              explicacao = f"Aguardar intervalo recomendado de 30 dias (mínimo 15 dias) após {vacina_codigo_origem}."
@@ -638,7 +703,7 @@ class RegrasVirusVivosAtenuados(_RegrasBase):
             explicacao="Aguardar intervalo recomendado de 30 dias (mínimo 15 dias) após a Varicela."
         ))
 
-    # Helper para verificar se dose existe no contexto (já que Experta não tem 'exists' fácil dentro do RHS sem passar pelo LHS)
+    # Helper para verificar se dose existe no contexto
     def get_dose_aplicada(self, codigo):
         for fact in self.facts.values():
             if isinstance(fact, DoseAplicada) and fact['vacina_codigo'] == codigo:

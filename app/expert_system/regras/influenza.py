@@ -32,19 +32,23 @@ class RegrasInfluenza(_RegrasBase):
     """
 
     # =================================================================
-    # CONTRAINDICAÇÃO (MENORES DE 6 MESES)
+    # MENORES DE 6 MESES - AGENDAMENTO (NOVA REGRA)
     # =================================================================
-    
+    # Agendamento para a idade mínima (6 meses).
+
     @Rule(
-        Idade(meses=MATCH.m),
-        TEST(lambda m: m < 6)
+        Idade(meses=MATCH.m, data_nascimento=MATCH.dn),
+        TEST(lambda m: m < 6),
+        NOT(DoseAplicada(vacina_codigo='INFLUENZA'))
     )
-    def regra_influenza_menor_6meses(self):
-        self.declare(Contraindicacao(
+    def regra_influenza_agendar_6meses(self, dn):
+        data_alvo = to_date(dn) + relativedelta(months=6)
+        self.declare(AgendamentoFuturo(
             vacina="Influenza",
-            dose="Qualquer",
-            motivo="Idade inferior a 6 meses.",
-            explicacao="A vacina da Influenza não é licenciada para crianças menores de 6 meses."
+            dose="1 (Primovacinação)",
+            data_minima=data_alvo,
+            data_recomendada=data_alvo,
+            explicacao="A vacina Influenza é indicada a partir dos 6 meses. Agendamento realizado para essa data."
         ))
 
     # =================================================================
