@@ -1,12 +1,53 @@
-# .dockerignore
+# 1. Sensitive Files and Environment Variables
+.env
+.env.*
+.flaskenv
+secrets.json
 
+# 2. Python Virtual Environments
+venv/
 .venv/
+env/
+.env_python/
+Pipfile.lock
+
+# 3. Compiled Python Files and Caches
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 *.pyo
 *.pyd
 .Python
+.pytest_cache/
+
+# 4. Local Database Files
+*.db
+*.sqlite3
 app.db
 app.db-journal
+
+# 5. Docker volumes and Data Directories
+pgdata/
+db_data/
+postgres_data/
+
+# 6. Execution Logs and Debug Files
+*.log
+logs/
+app.log
+
+# 7. Operating System Files
 .DS_Store
-.env
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 8. IDE and Editor Configurations
+.vscode/
+.idea/
+*.swp
+*.swo
+.sublime-workspace

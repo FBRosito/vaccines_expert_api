@@ -1,9 +1,12 @@
 # Intelligent Decision Support for Delayed Vaccination: An Expert System for the Brazilian National Immunization Program
 
-[![Python 3.13](https://img.shields.io/badge/Python-3.13-blue.svg?logo=python&logoColor=white)](https://www.python.org/downloads/release/python-3130/)
+[![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
+[![Framework: Flask](https://img.shields.io/badge/Framework-Flask-black.svg?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![Database: PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-336791.svg?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker Supported](https://img.shields.io/badge/Docker-Supported-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Standard: HL7 FHIR](https://img.shields.io/badge/Standard-HL7_FHIR-firebrick.svg)](https://hl7.org/fhir/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/FBRosito/unsupervised-athlete-biomarker-clustering/graphs/commit-activity)
-[![Open Science](https://img.shields.io/badge/Open-Science-success)](https://en.wikipedia.org/wiki/Open_science)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/FBRosito/vaccines_expert_api/graphs/commit-activity)
 
 This repository contains the source code for the RESTful Application Programming Interface (API) and the underlying Expert System (ES) associated with the research paper: **"Apoio inteligente à decisão em atrasos vacinais: um sistema especialista para o Programa Nacional de Imunizações"**.
 
