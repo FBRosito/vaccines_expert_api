@@ -10,31 +10,31 @@ else:
 
 from .fatos import Idade, DoseAplicada, RecomendacaoImediata, AgendamentoFuturo, Contraindicacao, EsquemaCompleto
 
-# --- FUNÇÃO AUXILIAR ---
+# --- HELPER FUNCTION ---
 def to_date(d):
-    """Converte datetime para date se necessário."""
+    """Converts datetime to date if necessary."""
     if isinstance(d, datetime.datetime):
         return d.date()
     return d
 
 class RegrasPneumo10(_RegrasBase):
     """
-    Regras para a Pneumocócica 10V.
+    Rules for the Pneumococcal 10V vaccine.
     """
 
     # =================================================================
-    # ESQUEMA PRIMÁRIO (D1)
+    # PRIMARY SCHEME (DOSE 1)
     # =================================================================
 
     @Rule(
-        Idade(meses=MATCH.m, data_nascimento=MATCH.dn), 
-        TEST(lambda m: m < 2), 
+        Idade(meses=MATCH.m, data_nascimento=MATCH.dn),
+        TEST(lambda m: m < 2),
         NOT(DoseAplicada(vacina_codigo='PNEUMO10', dose=1))
     )
-    def regra_pneumo10_d1_agendar(self, dn):
+    def rule_pneumo10_dose_1_schedule(self, dn):
         dn_data = to_date(dn)
         data_agendada = dn_data + relativedelta(months=2)
-        
+
         self.declare(AgendamentoFuturo(
             vacina="Pneumocócica 10V",
             dose=1,
@@ -44,18 +44,18 @@ class RegrasPneumo10(_RegrasBase):
         ))
 
     @Rule(
-        Idade(meses=MATCH.m, anos=MATCH.a), 
-        TEST(lambda a, m: a == 0 and m >= 2), 
+        Idade(meses=MATCH.m, anos=MATCH.a),
+        TEST(lambda a, m: a == 0 and m >= 2),
         NOT(DoseAplicada(vacina_codigo='PNEUMO10', dose=1))
     )
-    def regra_pneumo10_d1_recomendar_agora_menor1ano(self, m):
+    def rule_pneumo10_dose_1_recommend_now_under_1y(self, m):
         self.declare(RecomendacaoImediata(
             vacina="Pneumocócica 10V", dose=1,
             explicacao=f"Paciente com {m} meses. A 1ª dose da vacina Pneumocócica 10V é recomendada aos 2 meses."
         ))
 
     # =================================================================
-    # ESQUEMA PRIMÁRIO (D2)
+    # PRIMARY SCHEME (DOSE 2)
     # =================================================================
 
     @Rule(
@@ -66,28 +66,28 @@ class RegrasPneumo10(_RegrasBase):
         ),
         NOT(DoseAplicada(vacina_codigo='PNEUMO10', dose=2)),
         NOT(AgendamentoFuturo(vacina="Pneumocócica 10V", dose=2)),
-        TEST(lambda d1_data: 
+        TEST(lambda d1_data:
             datetime.date.today() < (to_date(d1_data) + relativedelta(months=2))
         )
     )
-    def regra_pneumo10_d2_agendar(self, d1_data):
+    def rule_pneumo10_dose_2_schedule(self, d1_data):
         data_base = to_date(d1_data)
-        
+
         self.declare(AgendamentoFuturo(
             vacina="Pneumocócica 10V", dose=2,
-            data_minima=data_base + relativedelta(days=30), 
-            data_recomendada=data_base + relativedelta(months=2), 
+            data_minima=data_base + relativedelta(days=30),
+            data_recomendada=data_base + relativedelta(months=2),
             explicacao="A 2ª dose é agendada para 2 meses após a 1ª dose."
         ))
-    
+
     @Rule(
         Idade(anos=MATCH.a, data_nascimento=MATCH.dn), TEST(lambda a: a < 5),
         DoseAplicada(vacina_codigo='PNEUMO10', dose=1, data_aplicacao=MATCH.d1),
         NOT(DoseAplicada(vacina_codigo='PNEUMO10', dose=2)),
-        TEST(lambda d1, dn: 
+        TEST(lambda d1, dn:
             (
-                (to_date(d1) >= (to_date(dn) + relativedelta(months=4))) 
-                and 
+                (to_date(d1) >= (to_date(dn) + relativedelta(months=4)))
+                and
                 (datetime.date.today() >= (to_date(d1) + relativedelta(days=30)))
             )
             or
@@ -96,25 +96,25 @@ class RegrasPneumo10(_RegrasBase):
             )
         )
     )
-    def regra_pneumo10_d2_recomendar_agora_atrasada(self):
+    def rule_pneumo10_dose_2_recommend_now_late(self):
         self.declare(RecomendacaoImediata(
             vacina="Pneumocócica 10V", dose=2,
             explicacao="A 2ª dose da Pneumocócica 10V está recomendada (intervalo cumprido)."
         ))
 
     # =================================================================
-    # REFORÇO (D3) - LÓGICA COMPLETA
+    # BOOSTER (DOSE 3) - FULL LOGIC
     # =================================================================
 
-    def _agendar_reforco_generico(self, d2_data, dn):
-        """Calcula reforço: Max(12 meses, D2 + 60 dias)"""
+    def _schedule_booster_generic(self, d2_data, dn):
+        """Calculates booster: Max(12 months, D2 + 60 days)"""
         d2_resolvida = to_date(d2_data)
         dn_data = to_date(dn)
-        
+
         data_12_meses = dn_data + relativedelta(months=12)
         data_intervalo_d2 = d2_resolvida + relativedelta(months=2)
         data_final = max(data_12_meses, data_intervalo_d2)
-        
+
         self.declare(AgendamentoFuturo(
             vacina="Pneumocócica 10V",
             dose="Reforço",
@@ -131,19 +131,19 @@ class RegrasPneumo10(_RegrasBase):
         NOT(DoseAplicada(vacina_codigo='PNEUMO10', dose="Reforço")),
         NOT(AgendamentoFuturo(vacina="Pneumocócica 10V", dose="Reforço"))
     )
-    def regra_pneumo10_reforco_pos_dose_aplicada(self, d2, dn):
-        self._agendar_reforco_generico(d2, dn)
+    def rule_pneumo10_booster_after_applied_dose(self, d2, dn):
+        self._schedule_booster_generic(d2, dn)
 
     @Rule(
         Idade(anos=MATCH.a, data_nascimento=MATCH.dn),
         TEST(lambda a: a < 5),
         AgendamentoFuturo(vacina="Pneumocócica 10V", dose=2, data_recomendada=MATCH.d2_prevista),
-        NOT(DoseAplicada(vacina_codigo='PNEUMO10', dose=2)), 
+        NOT(DoseAplicada(vacina_codigo='PNEUMO10', dose=2)),
         NOT(DoseAplicada(vacina_codigo='PNEUMO10', dose=3)),
         NOT(AgendamentoFuturo(vacina="Pneumocócica 10V", dose="Reforço"))
     )
-    def regra_pneumo10_reforco_pos_agendamento(self, d2_prevista, dn):
-        self._agendar_reforco_generico(d2_prevista, dn)
+    def rule_pneumo10_booster_after_scheduled_dose(self, d2_prevista, dn):
+        self._schedule_booster_generic(d2_prevista, dn)
 
     @Rule(
         Idade(anos=MATCH.a, data_nascimento=MATCH.dn),
@@ -153,8 +153,8 @@ class RegrasPneumo10(_RegrasBase):
         NOT(DoseAplicada(vacina_codigo='PNEUMO10', dose=3)),
         NOT(AgendamentoFuturo(vacina="Pneumocócica 10V", dose="Reforço"))
     )
-    def regra_pneumo10_reforco_pos_recomendacao_d2(self, dn):
-        self._agendar_reforco_generico(datetime.date.today(), dn)
+    def rule_pneumo10_booster_after_dose_2_recommendation(self, dn):
+        self._schedule_booster_generic(datetime.date.today(), dn)
 
     @Rule(
         Idade(meses=MATCH.m, anos=MATCH.a),
@@ -162,18 +162,18 @@ class RegrasPneumo10(_RegrasBase):
         NOT(DoseAplicada(vacina_codigo='PNEUMO10', dose=3)),
         NOT(DoseAplicada(vacina_codigo='PNEUMO10', dose="Reforço")),
         TEST(lambda a, m, d2:
-            (a >= 1) and 
+            (a >= 1) and
             (datetime.date.today() >= (to_date(d2) + relativedelta(months=2)))
         )
     )
-    def regra_pneumo10_reforco_aplicar_agora(self):
+    def rule_pneumo10_booster_recommend_now(self):
         self.declare(RecomendacaoImediata(
-            vacina="Pneumocócica 10V", dose="Reforço", 
+            vacina="Pneumocócica 10V", dose="Reforço",
             explicacao="Reforço recomendado: Criança maior que 1 ano com intervalo de 60 dias da 2ª dose cumprido."
         ))
 
     # =================================================================
-    # CATCH-UP & CONCLUSÃO
+    # CATCH-UP & COMPLETION
     # =================================================================
 
     @Rule(
@@ -181,7 +181,7 @@ class RegrasPneumo10(_RegrasBase):
         NOT(DoseAplicada(vacina_codigo='PNEUMO10')),
         NOT(AgendamentoFuturo(vacina="Pneumocócica 10V"))
     )
-    def regra_pneumo10_catchup_dose_unica(self, a):
+    def rule_pneumo10_catch_up_single_dose(self, a):
         self.declare(RecomendacaoImediata(
             vacina="Pneumocócica 10V", dose="Única",
             explicacao=f"Para crianças com {a} anos sem comprovação vacinal, recomenda-se dose única."
@@ -192,7 +192,7 @@ class RegrasPneumo10(_RegrasBase):
         NOT(DoseAplicada(vacina_codigo='PNEUMO10', dose=3)),
         NOT(DoseAplicada(vacina_codigo='PNEUMO10', dose="Única"))
     )
-    def regra_pneumo10_contraindicacao_idade(self):
+    def rule_pneumo10_contraindicated_age(self):
         self.declare(Contraindicacao(
             vacina="Pneumocócica 10V", dose="Todas",
             motivo="Idade superior à permitida.",
@@ -206,7 +206,7 @@ class RegrasPneumo10(_RegrasBase):
             DoseAplicada(vacina_codigo='PNEUMO10', dose="Única", data_aplicacao=MATCH.data_dose)
         )
     )
-    def regra_pneumo10_esquema_completo(self, data_dose):
+    def rule_pneumo10_scheme_complete(self, data_dose):
         self.declare(EsquemaCompleto(
             vacina="Pneumocócica 10V",
             explicacao="Esquema de vacinação da Pneumocócica 10V finalizado.",

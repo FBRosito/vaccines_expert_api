@@ -6,7 +6,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 
-# Instancia as extensões
+# Extension instances (initialised inside create_app)
 db = SQLAlchemy()
 migrate = Migrate()
 
@@ -17,21 +17,18 @@ limiter = Limiter(
 )
 
 def create_app(config_name='default'):
-    """
-    Função Fábrica da Aplicação (Application Factory).
-    Cria e configura uma instância da aplicação Flask.
-    """
+    """Application factory. Creates and configures the Flask application instance."""
     app = Flask(__name__)
 
-    # 1. Carregar a configuração a partir do objeto importado
+    # 1. Load configuration from the config object
     app.config.from_object(config[config_name])
 
-    # 2. Inicializar extensões (ex: banco de dados)
+    # 2. Initialise extensions
     db.init_app(app)
     migrate.init_app(app, db)
     limiter.init_app(app)
 
-    # 3. Registrar os Blueprints (nossas rotas)
+    # 3. Register blueprints
     from .api import api_bp as api_blueprint
     app.register_blueprint(api_blueprint, url_prefix='/api')
 
@@ -43,6 +40,6 @@ def create_app(config_name='default'):
     @limiter.limit("20 per minute")
     @app.route('/health')
     def health():
-        return "Servidor do Sistema Especialista está no ar!", 200
+        return "Expert System Server is running.", 200
 
     return app

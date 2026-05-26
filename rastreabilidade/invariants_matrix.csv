@@ -1,0 +1,11 @@
+ID,Invariante,Exemplos
+INV-01,recomendadas ∩ em_dia = ∅,800
+INV-02,recomendadas ∩ contraindicadas = ∅,800
+INV-03,data_minima em aprazadas ≥ hoje,800
+INV-04,paciente <10a → Dengue ∉ recomendadas,800
+INV-05,idoso ≥60a sem FA → FA ∈ contraindicadas,800
+INV-06,idoso ≥60a sem Pneumo23 → Pneumo23 ∈ recomendadas,800
+INV-07,5a≤idade<20a → COVID contraindicado ou ausente de recomendadas,800
+INV-08,6a≤idade<10a → Influenza ∈ contraindicadas,800
+INV-09,≥15a sem Dengue D1 → Dengue ∈ contraindicadas,800
+INV-10,qualquer paciente → total de outputs > 0,800

@@ -12,16 +12,16 @@ from .fatos import Idade, DoseAplicada, RecomendacaoImediata, AgendamentoFuturo,
 
 class RegrasHepatiteB(_RegrasBase):
     """
-    Regras para Hepatite B (ao nascer e esquema de catch-up >= 7 anos).
-    O esquema primário infantil é coberto pela Penta.
+    Rules for Hepatitis B (at birth and catch-up schedule for patients >= 7 years).
+    The childhood primary schedule is covered by the Penta vaccine.
     """
 
     # =================================================================
-    # ESQUEMA AO NASCER (0-30 DIAS)
+    # AT-BIRTH SCHEDULE (0-30 DAYS)
     # =================================================================
 
     @Rule(Idade(dias=MATCH.d), TEST(lambda d: d <= 30), NOT(DoseAplicada(vacina_codigo='HEPATITE_B')))
-    def regra_hep_b_ao_nascer_pendente(self):
+    def rule_hep_b_at_birth_pending(self):
         self.declare(RecomendacaoImediata(
             vacina="Hepatite B (ao nascer)",
             dose="Única",
@@ -29,7 +29,7 @@ class RegrasHepatiteB(_RegrasBase):
         ))
 
     @Rule(DoseAplicada(vacina_codigo='HEPATITE_B', data_aplicacao=MATCH.data_dose))
-    def regra_hep_b_ao_nascer_ok(self, data_dose):
+    def rule_hep_b_at_birth_ok(self, data_dose):
         self.declare(EsquemaCompleto(
             vacina="Hepatite B (ao nascer)",
             explicacao="Dose ao nascer aplicada corretamente, conforme registro.",
@@ -37,7 +37,7 @@ class RegrasHepatiteB(_RegrasBase):
         ))
 
     @Rule(Idade(dias=MATCH.d), TEST(lambda d: d > 30), NOT(DoseAplicada(vacina_codigo='HEPATITE_B')))
-    def regra_hep_b_ao_nascer_contraindicacao_idade(self):
+    def rule_hep_b_at_birth_contraindicated_age(self):
         self.declare(Contraindicacao(
             vacina="Hepatite B (ao nascer)",
             dose="Única",
@@ -46,16 +46,16 @@ class RegrasHepatiteB(_RegrasBase):
         ))
 
     # =================================================================
-    # ESQUEMA ADULTO (>= 7 ANOS)
+    # ADULT SCHEDULE (>= 7 YEARS)
     # =================================================================
-    
+
     @Rule(
         Idade(anos=MATCH.a), TEST(lambda a: a >= 7),
         NOT(DoseAplicada(vacina_codigo='HEPATITE_B')),
         NOT(DoseAplicada(vacina_codigo='PENTA')),
         NOT(EsquemaCompleto(vacina="Hepatite B (esquema adulto)"))
     )
-    def regra_hep_b_maior7_recomendar_agora(self, a):
+    def rule_hep_b_over7_recommend_now(self, a):
         self.declare(RecomendacaoImediata(
             vacina="Hepatite B (esquema adulto)",
             dose=1,
@@ -68,9 +68,9 @@ class RegrasHepatiteB(_RegrasBase):
         NOT(DoseAplicada(vacina_codigo='HEPATITE_B', dose=2)),
         NOT(EsquemaCompleto(vacina="Hepatite B (esquema adulto)"))
     )
-    def regra_hep_b_maior7_agendar_d2(self, d1):
+    def rule_hep_b_over7_schedule_dose_2(self, d1):
         d1_data = d1.date() if isinstance(d1, datetime.datetime) else d1
-        
+
         data_min = d1_data + relativedelta(weeks=4)
         data_rec = d1_data + relativedelta(days=30)
         hoje = datetime.date.today()
@@ -83,7 +83,7 @@ class RegrasHepatiteB(_RegrasBase):
                 data_recomendada=data_rec,
                 explicacao="A 2ª dose é recomendada 30 dias após a primeira (mínimo de 4 semanas)."
             ))
-    
+
     @Rule(
         Idade(anos=MATCH.a), TEST(lambda a: a >= 7),
         DoseAplicada(vacina_codigo='HEPATITE_B', dose=1, data_aplicacao=MATCH.d1),
@@ -91,7 +91,7 @@ class RegrasHepatiteB(_RegrasBase):
         NOT(DoseAplicada(vacina_codigo='HEPATITE_B', dose=2)),
         NOT(EsquemaCompleto(vacina="Hepatite B (esquema adulto)"))
     )
-    def regra_hep_b_maior7_d2_recomendar_atrasada(self):
+    def rule_hep_b_over7_dose_2_recommend_late(self):
         self.declare(RecomendacaoImediata(
             vacina="Hepatite B (esquema adulto)",
             dose=2,
@@ -110,10 +110,10 @@ class RegrasHepatiteB(_RegrasBase):
         NOT(AgendamentoFuturo(vacina="Hepatite B (esquema adulto)", dose=3)),
         NOT(EsquemaCompleto(vacina="Hepatite B (esquema adulto)"))
     )
-    def regra_hep_b_maior7_agendar_d3_completo(self, d1, d2_ap=None, d2_ag=None, d2_rec=None):
+    def rule_hep_b_over7_schedule_dose_3(self, d1, d2_ap=None, d2_ag=None, d2_rec=None):
         """
-        (Agendamento) D3: Ideal 6 meses após D1.
-        Baseia-se na D2 (Real, Planejada ou Recomendada Agora).
+        (Scheduling) Dose 3: ideal 6 months after dose 1.
+        Based on dose 2 (actual, planned, or currently recommended).
         """
         d1_data = d1.date() if isinstance(d1, datetime.datetime) else d1
         hoje = datetime.date.today()
@@ -128,15 +128,15 @@ class RegrasHepatiteB(_RegrasBase):
         else:
             return
 
-        # 1. Calcula os mínimos obrigatórios
+        # 1. Calculate mandatory minimums
         min_apos_d1 = d1_data + relativedelta(weeks=16)
         min_apos_d2 = d2_base + relativedelta(weeks=8)
         data_minima_final = max(min_apos_d1, min_apos_d2)
 
-        # 2. Calcula a data ideal (recomendada)
+        # 2. Calculate the ideal (recommended) date
         data_ideal = d1_data + relativedelta(months=6)
 
-        # 3. Lógica de priorização (Ideal vs Mínimo)
+        # 3. Prioritization logic (ideal vs minimum)
         data_recomendada_final = max(data_ideal, data_minima_final)
 
         if data_recomendada_final > hoje:
@@ -147,30 +147,30 @@ class RegrasHepatiteB(_RegrasBase):
                 data_recomendada=data_recomendada_final,
                 explicacao="Agendamento da 3ª dose (conclusão do esquema 0-1-6). Data respeita o prazo ideal de 6 meses após a 1ª dose e o intervalo mínimo de segurança de 8 semanas após a 2ª dose."
             ))
-    
+
     @Rule(
         Idade(anos=MATCH.a), TEST(lambda a: a >= 7),
         DoseAplicada(vacina_codigo='HEPATITE_B', dose=1, data_aplicacao=MATCH.d1),
         DoseAplicada(vacina_codigo='HEPATITE_B', dose=2, data_aplicacao=MATCH.d2),
-        TEST(lambda d1, d2: 
+        TEST(lambda d1, d2:
              datetime.date.today() >= ((d2.date() if isinstance(d2, datetime.datetime) else d2) + relativedelta(weeks=8)) and
              datetime.date.today() >= ((d1.date() if isinstance(d1, datetime.datetime) else d1) + relativedelta(weeks=16))
         ),
         NOT(DoseAplicada(vacina_codigo='HEPATITE_B', dose=3)),
         NOT(EsquemaCompleto(vacina="Hepatite B (esquema adulto)"))
     )
-    def regra_hep_b_maior7_d3_recomendar_atrasada(self):
+    def rule_hep_b_over7_dose_3_recommend_late(self):
         self.declare(RecomendacaoImediata(
             vacina="Hepatite B (esquema adulto)",
             dose=3,
             explicacao="A 3ª dose da Hepatite B está atrasada. Aplicar agora (todos os intervalos mínimos respeitados)."
         ))
-    
+
     @Rule(
         Idade(anos=MATCH.a), TEST(lambda a: a >= 7),
         DoseAplicada(vacina_codigo='HEPATITE_B', dose=3, data_aplicacao=MATCH.d3_data)
     )
-    def regra_hep_b_maior7_esquema_ok(self, d3_data):
+    def rule_hep_b_over7_scheme_complete(self, d3_data):
         self.declare(EsquemaCompleto(
             vacina="Hepatite B (esquema adulto)",
             explicacao="Esquema de 3 doses para Hepatite B finalizado.",

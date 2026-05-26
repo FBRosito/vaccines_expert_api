@@ -1,0 +1,29 @@
+ID_Req,Fonte,Cláusula,Módulo,Test_Cases,Status,Observação
+REQ-BCG-01,IN 2026 §1,BCG: recomendar para 0a a 4a11m29d sem dose prévia,app/expert_system/regras/bcg.py — regra_bcg_recomendar,"BCG-01, BCG-02, BCG-03, BCG-04, INV-10",Coberto,
+REQ-BCG-02,IN 2026 §1,BCG: contraindicar ≥5a sem dose prévia,app/expert_system/regras/bcg.py — regra_bcg_contraindicar,"BCG-05, BCG-08",Coberto,
+REQ-HEPB-01,IN 2026 §2,Hepatite B: D1 ao nascer; D2 (2m); D3 (6m),app/expert_system/regras/hepatite_b.py,HEPB-01..HEPB-07,Coberto,
+REQ-HEPB-02,IN 2026 §2,Hepatite B: recomendar adulto sem esquema completo,app/expert_system/regras/hepatite_b.py — regra_hepb_adulto_recomendar,"HEPB-08, HEPB-09",Coberto,
+REQ-PENTA-01,IN 2026 §3,"Penta: D1 (2m), D2 (4m), D3 (6m); contraindicar ≥7a",app/expert_system/regras/penta_dtp.py — RegrasPentaDTP,"PENTA-01..PENTA-10, PENTA-11, PENTA-12",Coberto,
+REQ-DTP-01,IN 2026 §3,"DTP: R1 (15m), R2 (4a); contraindicar ≥7a sem Penta completa",app/expert_system/regras/penta_dtp.py — RegrasPentaDTP,PENTA-05..PENTA-09,Coberto,
+REQ-VIP-01,IN 2026 §4,"VIP (Poliomielite): D1 (2m), D2 (4m), D3 (6m), Reforço (15m); CI ≥5a",app/expert_system/regras/vip.py,VIP-01..VIP-10,Coberto,
+REQ-ROTA-01,IN 2026 §5,Rotavírus: D1 ≤3m15d de vida; D2 ≤7m29d; CI após limite etário,app/expert_system/regras/rotavirus.py,ROTA-01..ROTA-06,Coberto,Limite VL: D1 contraindicada com >105 dias de vida (3m15d)
+REQ-PNEUMO10-01,IN 2026 §6,"Pneumo10: D1 (2m), D2 (4m), Reforço (12m); dose única catch-up 1a–4a11m",app/expert_system/regras/pneumo10.py,P10-01..P10-10,Coberto,
+REQ-MEN-01,IN 2026 §7,"Meningocócica C: D1 (3m), D2 (5m), Reforço (12m); ACWY catch-up adolescentes",app/expert_system/regras/meningo.py,MEN-01..MEN-08,Coberto,
+REQ-INF-01,IN 2026 §8,Influenza: crianças 6m–5a11m29d (primovacinação D1+D2; anual),app/expert_system/regras/influenza.py,"INF-01..INF-08, INV-10",Coberto,
+REQ-INF-02,IN 2026 §8,Influenza: idosos ≥60a (dose anual),app/expert_system/regras/influenza.py — regra_influenza_idoso_anual,"INF-13, INF-14, INV-10",Coberto,
+REQ-INF-03,IN 2026 §8 (extensão),Influenza: adultos 10a–59a11m29d (extensão além da rotina da IN),app/expert_system/regras/influenza.py — regra_influenza_adolescente_adulto,"INF-11, INF-12",Divergente,"IN 2026 §8 cobre adultos apenas em grupos especiais (gestantes, profissionais de saúde etc.); implementação estendida à população geral baseada em nota técnica CTAI"
+REQ-INF-04,IN 2026 §8,Influenza: gap etário 6a–9a11m29d contraindicada em rotina,app/expert_system/regras/influenza.py — regra_influenza_gap_etario_ci,"INF-09, INF-10, INV-08",Coberto,
+REQ-COV-01,IN 2026 §9,"COVID-19: crianças 6m–4a11m29d (Pfizer ou Moderna, 2–3 doses)",app/expert_system/regras/covid19.py,COV-01..COV-09,Coberto,
+REQ-COV-02,IN 2026 §9,COVID-19: idosos ≥60a (reforço semestral),app/expert_system/regras/covid19.py — regra_covid_idoso_*,"COV-16, COV-17, COV-18",Coberto,
+REQ-COV-03,IN 2026 §9 (extensão),COVID-19: adultos 20a–59a11m29d (extensão além da rotina da IN),app/expert_system/regras/covid19.py — regra_covid_adulto_*,COV-12..COV-15,Divergente,IN 2026 §9 não inclui adultos 20–59a na rotina; implementação baseada em nota técnica CTAI
+REQ-COV-04,IN 2026 §9,COVID-19: contraindicado em rotina para 5a–19a11m29d,app/expert_system/regras/covid19.py — regra_covid_ci_*,"COV-10, COV-11, INV-07",Coberto,
+REQ-FA-01,IN 2026 §10,Febre Amarela: D1 a partir de 9m de vida; reforço (4a),app/expert_system/regras/virus_vivos_atenuados.py — RegrasVirusVivosAtenuados,"VV-08, VV-09, VV-10",Coberto,
+REQ-FA-02,IN 2026 §10,Febre Amarela: contraindicada em rotina para ≥60a,app/expert_system/regras/virus_vivos_atenuados.py — regra_fa_contraindicacao_idoso,"VV-11, INV-05",Coberto,
+REQ-SCR-01,IN 2026 §11,"SCR: D1 (12m), D2 (15m); recomendar adulto sem esquema completo (<30a)",app/expert_system/regras/virus_vivos_atenuados.py,VV-01..VV-05,Coberto,
+REQ-SCR-02,IN 2026 §11,Conflito SCR × FA em <2a: SCR priorizado (salience=100),app/expert_system/regras/virus_vivos_atenuados.py — regra_conflito_scr_fa,VV-12,Coberto,Intervalo mínimo 30 dias entre vírus vivos atenuados
+REQ-VAR-01,IN 2026 §12,"Varicela: D1 (15m), D2 (4a)",app/expert_system/regras/virus_vivos_atenuados.py,"VV-06, VV-07",Coberto,
+REQ-HEPA-01,IN 2026 §13,Hepatite A: dose única (15m); CI ≥5a,app/expert_system/regras/hepatite_a.py,HEPA-01..HEPA-05,Coberto,
+REQ-HPV-01,IN 2026 §14,HPV: 2 doses (9–14a); 3 doses (15–45a); CI <9a e >45a,app/expert_system/regras/hpv.py,HPV-01..HPV-08,Coberto,
+REQ-DT-01,IN 2026 §15,dT: esquema primário D1+D2+D3 para ≥7a não vacinados; reforço decenal,app/expert_system/regras/dt_adulto.py,DT-01..DT-09,Coberto,
+REQ-P23-01,IN 2026 §16,Pneumo23: D1 para ≥60a; D2 após 5 anos da D1,app/expert_system/regras/pneumo23.py,"P23-01..P23-07, INV-06",Divergente,IN 2026 §16 restringe a acamados/institucionalizados; implementação estendida a todos ≥60a
+REQ-DNG-01,IN 2026 §19,Dengue: D1 para 10a–14a11m29d; D2 após 90 dias; aprazado <10a; CI ≥15a,app/expert_system/regras/dengue.py,"DNG-01..DNG-10, INV-04, INV-09",Coberto,Intervalo entre doses: 90 dias (3 meses)

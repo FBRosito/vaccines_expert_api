@@ -10,38 +10,38 @@ else:
 
 from .fatos import Idade, DoseAplicada, RecomendacaoImediata, AgendamentoFuturo, Contraindicacao, EsquemaCompleto
 
-# --- FUNÇÃO AUXILIAR ---
+# --- HELPER FUNCTION ---
 def to_date(d):
-    """Converte datetime para date se necessário."""
+    """Converts datetime to date if necessary."""
     if isinstance(d, datetime.datetime):
         return d.date()
     return d
 
 class RegrasInfluenza(_RegrasBase):
     """
-    Regras para a Vacina Influenza (Gripe) - PNI.
-    
-    Público Alvo:
-    - Crianças: 6 meses a < 6 anos (5 anos, 11 meses e 29 dias).
-    - Idosos: >= 60 anos.
-    
-    Esquema:
-    - Crianças (Primovacinação): 2 doses com intervalo de 30 dias.
-    - Crianças (Com histórico): Dose única anual.
-    - Idosos: Dose única anual.
+    Rules for the Influenza (Flu) vaccine - PNI.
+
+    Target population:
+    - Children: 6 months to < 6 years (5 years, 11 months and 29 days).
+    - Elderly: >= 60 years.
+
+    Schedule:
+    - Children (Primary vaccination): 2 doses with a 30-day interval.
+    - Children (With prior history): Annual single dose.
+    - Elderly: Annual single dose.
     """
 
     # =================================================================
-    # MENORES DE 6 MESES - AGENDAMENTO (NOVA REGRA)
+    # UNDER 6 MONTHS - SCHEDULING
     # =================================================================
-    # Agendamento para a idade mínima (6 meses).
+    # Schedule for the minimum age (6 months).
 
     @Rule(
         Idade(meses=MATCH.m, data_nascimento=MATCH.dn),
         TEST(lambda m: m < 6),
         NOT(DoseAplicada(vacina_codigo='INFLUENZA'))
     )
-    def regra_influenza_agendar_6meses(self, dn):
+    def rule_influenza_schedule_6months(self, dn):
         data_alvo = to_date(dn) + relativedelta(months=6)
         self.declare(AgendamentoFuturo(
             vacina="Influenza",
@@ -52,16 +52,16 @@ class RegrasInfluenza(_RegrasBase):
         ))
 
     # =================================================================
-    # CRIANÇAS - PRIMOVACINAÇÃO (1ª DOSE)
+    # CHILDREN - PRIMARY VACCINATION (DOSE 1)
     # =================================================================
-    # Se a criança tem entre 6m e 6 anos E NUNCA tomou vacina na vida.
+    # If the child is between 6m and 6 years AND has never been vaccinated.
 
     @Rule(
         Idade(meses=MATCH.m, anos=MATCH.a),
         TEST(lambda a, m: (a < 6) and (a * 12 + m >= 6)),
         NOT(DoseAplicada(vacina_codigo='INFLUENZA'))
     )
-    def regra_influenza_crianca_primo_d1(self):
+    def rule_influenza_child_primary_dose_1(self):
         self.declare(RecomendacaoImediata(
             vacina="Influenza",
             dose="1 (Primovacinação)",
@@ -69,24 +69,24 @@ class RegrasInfluenza(_RegrasBase):
         ))
 
     # =================================================================
-    # CRIANÇAS - PRIMOVACINAÇÃO (2ª DOSE)
+    # CHILDREN - PRIMARY VACCINATION (DOSE 2)
     # =================================================================
-    # Se tomou a 1ª DOSE NESTE ANO, é a única dose da vida, e precisa da 2ª DOSE (30 dias depois).
+    # If dose 1 was given THIS YEAR and it is the only lifetime dose, dose 2 is needed (30 days later).
 
-    # CASO 1: AGENDAMENTO DA 2ª DOSE (Intervalo < 30 dias)
+    # CASE 1: SCHEDULE DOSE 2 (interval < 30 days)
     @Rule(
         Idade(anos=MATCH.a), TEST(lambda a: a < 6),
         DoseAplicada(vacina_codigo='INFLUENZA', data_aplicacao=MATCH.d1),
         NOT(DoseAplicada(vacina_codigo='INFLUENZA', dose=2)),
-        TEST(lambda d1: 
+        TEST(lambda d1:
              (to_date(d1).year == datetime.date.today().year) and
              (datetime.date.today() < (to_date(d1) + relativedelta(days=30)))
         )
     )
-    def regra_influenza_crianca_primo_d2_agendar(self, d1):
+    def rule_influenza_child_primary_dose_2_schedule(self, d1):
         data_base = to_date(d1)
         data_dose2 = data_base + relativedelta(days=30)
-        
+
         self.declare(AgendamentoFuturo(
             vacina="Influenza",
             dose="2 (Primovacinação)",
@@ -95,17 +95,17 @@ class RegrasInfluenza(_RegrasBase):
             explicacao="Primovacinação: A 2ª dose deve ser aplicada 30 dias após a 1ª dose."
         ))
 
-    # CASO 2: RECOMENDAÇÃO IMEDIATA DA 2ª DOSE (Já passou 30 dias)
+    # CASE 2: IMMEDIATE RECOMMENDATION FOR DOSE 2 (30 days have passed)
     @Rule(
         Idade(anos=MATCH.a), TEST(lambda a: a < 6),
         DoseAplicada(vacina_codigo='INFLUENZA', data_aplicacao=MATCH.d1),
         NOT(DoseAplicada(vacina_codigo='INFLUENZA', dose=2)),
-        TEST(lambda d1: 
+        TEST(lambda d1:
              (to_date(d1).year == datetime.date.today().year) and
              (datetime.date.today() >= (to_date(d1) + relativedelta(days=30)))
         )
     )
-    def regra_influenza_crianca_primo_d2_aplicar(self):
+    def rule_influenza_child_primary_dose_2_recommend_now(self):
         self.declare(RecomendacaoImediata(
             vacina="Influenza",
             dose="2 (Primovacinação)",
@@ -113,12 +113,12 @@ class RegrasInfluenza(_RegrasBase):
         ))
 
     # =================================================================
-    # CRIANÇAS - DOSE ANUAL (COM HISTÓRICO)
+    # CHILDREN - ANNUAL DOSE (WITH PRIOR HISTORY)
     # =================================================================
-    # Criança entre 6m e 6a que já tomou vacina em anos anteriores.
-    # Esta regra recomenda a dose anual.
-    # Se a criança já tiver tomado a dose deste ano, a regra 'regra_limpeza_ja_vacinado_ano'
-    # irá disparar e declarar EsquemaCompleto, resolvendo o conflito.
+    # Child between 6m and 6y who was vaccinated in prior years.
+    # This rule recommends the annual dose.
+    # If the child has already received the dose this year, rule_cleanup_already_vaccinated_year
+    # will fire and declare EsquemaCompleto, resolving the conflict.
 
     @Rule(
         Idade(meses=MATCH.m, anos=MATCH.a),
@@ -127,7 +127,7 @@ class RegrasInfluenza(_RegrasBase):
         TEST(lambda d_antiga: to_date(d_antiga).year < datetime.date.today().year),
         NOT(RecomendacaoImediata(vacina="Influenza", dose="Anual"))
     )
-    def regra_influenza_crianca_anual_recomendar(self):
+    def rule_influenza_child_annual_recommend(self):
         self.declare(RecomendacaoImediata(
             vacina="Influenza",
             dose="Anual",
@@ -139,12 +139,12 @@ class RegrasInfluenza(_RegrasBase):
         DoseAplicada(vacina_codigo='INFLUENZA', data_aplicacao=MATCH.d_atual),
         TEST(lambda d_atual: to_date(d_atual).year == datetime.date.today().year),
         OR(
-            DoseAplicada(vacina_codigo='INFLUENZA', data_aplicacao=MATCH.d_antiga, 
+            DoseAplicada(vacina_codigo='INFLUENZA', data_aplicacao=MATCH.d_antiga,
                         test=lambda d_antiga: to_date(d_antiga).year < datetime.date.today().year),
             DoseAplicada(vacina_codigo='INFLUENZA', dose=2)
         )
     )
-    def regra_limpeza_ja_vacinado_ano(self, d_atual):
+    def rule_cleanup_already_vaccinated_year(self, d_atual):
         self.declare(EsquemaCompleto(
             vacina="Influenza",
             explicacao=f"Vacinação de Influenza ({datetime.date.today().year}) concluída.",
@@ -152,7 +152,7 @@ class RegrasInfluenza(_RegrasBase):
         ))
 
     # =================================================================
-    # IDOSOS (>= 60 ANOS)
+    # ELDERLY (>= 60 YEARS)
     # =================================================================
 
     @Rule(
@@ -160,7 +160,7 @@ class RegrasInfluenza(_RegrasBase):
         TEST(lambda a: a >= 60),
         NOT(RecomendacaoImediata(vacina="Influenza", dose="Anual"))
     )
-    def regra_influenza_idoso_anual(self):
+    def rule_influenza_elderly_annual(self):
         self.declare(RecomendacaoImediata(
             vacina="Influenza",
             dose="Anual",
@@ -173,7 +173,7 @@ class RegrasInfluenza(_RegrasBase):
         DoseAplicada(vacina_codigo='INFLUENZA', data_aplicacao=MATCH.d_atual),
         TEST(lambda d_atual: to_date(d_atual).year == datetime.date.today().year)
     )
-    def regra_influenza_idoso_completo(self, d_atual):
+    def rule_influenza_elderly_scheme_complete(self, d_atual):
         self.declare(EsquemaCompleto(
             vacina="Influenza",
             explicacao=f"Dose anual de {datetime.date.today().year} realizada.",
@@ -181,35 +181,73 @@ class RegrasInfluenza(_RegrasBase):
         ))
 
     # =================================================================
-    # FORA DO PÚBLICO ALVO (Rotina)
+    # ADOLESCENTS AND ADULTS (10 to 59 years) - ANNUAL DOSE
     # =================================================================
-    
+
     @Rule(
         Idade(anos=MATCH.a),
-        TEST(lambda a: a >= 6 and a < 60)
+        TEST(lambda a: 10 <= a < 60),
+        NOT(DoseAplicada(vacina_codigo='INFLUENZA',
+                         data_aplicacao=MATCH.d,
+                         test=lambda d: to_date(d).year == datetime.date.today().year))
     )
-    def regra_influenza_fora_grupo(self):
+    def rule_influenza_adolescent_adult_annual(self):
+        self.declare(RecomendacaoImediata(
+            vacina="Influenza",
+            dose="Anual",
+            explicacao=(
+                "A IN 2026 inclui adolescentes (10-19 anos) e adultos (20-59 anos) "
+                "no calendário de rotina da Influenza. Recomenda-se a dose anual."
+            )
+        ))
+
+    @Rule(
+        Idade(anos=MATCH.a),
+        TEST(lambda a: 10 <= a < 60),
+        DoseAplicada(vacina_codigo='INFLUENZA', data_aplicacao=MATCH.d_atual),
+        TEST(lambda d_atual: to_date(d_atual).year == datetime.date.today().year)
+    )
+    def rule_influenza_adolescent_adult_scheme_complete(self, d_atual):
+        self.declare(EsquemaCompleto(
+            vacina="Influenza",
+            explicacao=f"Dose anual de Influenza ({datetime.date.today().year}) realizada.",
+            data_ultima_dose=to_date(d_atual)
+        ))
+
+    # =================================================================
+    # OUTSIDE TARGET POPULATION (Routine) — age gap 6-9 years in IN 2026
+    # =================================================================
+
+    @Rule(
+        Idade(anos=MATCH.a),
+        TEST(lambda a: a >= 6 and a < 10)
+    )
+    def rule_influenza_outside_target_group(self):
         self.declare(Contraindicacao(
             vacina="Influenza",
             dose="Anual",
             motivo="Fora da faixa etária de rotina.",
-            explicacao="No PNI, a Influenza é rotina para crianças (6m a <6a) e idosos (>=60). Outros grupos dependem de comorbidades."
+            explicacao=(
+                "A IN 2026 indica Influenza em rotina para crianças (6m a <6a), "
+                "adolescentes e adultos (10-59a) e idosos (>=60a). "
+                "Faixa etária 6-9 anos depende de comorbidades ou campanhas específicas."
+            )
         ))
 
     # =================================================================
-    # CONCLUSÃO DE PRIMOVACINAÇÃO (CRIANÇA)
+    # PRIMARY VACCINATION COMPLETION (CHILD)
     # =================================================================
-    
+
     @Rule(
         Idade(anos=MATCH.a), TEST(lambda a: a < 6),
         DoseAplicada(vacina_codigo='INFLUENZA', dose=1, data_aplicacao=MATCH.d1),
         DoseAplicada(vacina_codigo='INFLUENZA', dose=2, data_aplicacao=MATCH.d2),
-        TEST(lambda d1, d2: 
-             (to_date(d1).year == datetime.date.today().year) and 
+        TEST(lambda d1, d2:
+             (to_date(d1).year == datetime.date.today().year) and
              (to_date(d2).year == datetime.date.today().year)
         )
     )
-    def regra_influenza_primo_completa_ano(self, d2):
+    def rule_influenza_primary_complete_year(self, d2):
         self.declare(EsquemaCompleto(
             vacina="Influenza",
             explicacao=f"Primovacinação completa no ano de {datetime.date.today().year}.",

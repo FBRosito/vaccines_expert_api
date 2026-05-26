@@ -12,6 +12,7 @@ from app.expert_system.regras.penta_dtp import RegrasPentaDTP
 from app.expert_system.regras.vip import RegrasVip
 from app.expert_system.regras.rotavirus import RegrasRotavirus
 from app.expert_system.regras.pneumo10 import RegrasPneumo10
+from app.expert_system.regras.pneumo23 import RegrasPneumo23
 from app.expert_system.regras.meningo import RegrasMeningo
 from app.expert_system.regras.covid19 import RegrasCovid19
 from app.expert_system.regras.hepatite_a import RegrasHepatiteA
@@ -19,41 +20,50 @@ from app.expert_system.regras.virus_vivos_atenuados import RegrasVirusVivosAtenu
 from app.expert_system.regras.dt_adulto import RegrasDTAdulto
 from app.expert_system.regras.hpv import RegrasHPV
 from app.expert_system.regras.influenza import RegrasInfluenza
+from app.expert_system.regras.dengue import RegrasDengue
 
 from app.repositories import log_repository
 from app.repositories.models import PlanoVacinalLogModel
 
-from app.utils.helpers import converter_datas_para_string
+import logging
+from app.utils.helpers import convert_dates_to_str
 
-# --- MAPA DE NOMES DE VACINAS (DO EXPERTA) PARA CÓDIGOS SIPNI (RNDS) ---
+logger = logging.getLogger(__name__)
+
+# --- Vaccine name → SIPNI code mapping (internal Experta names → RNDS/SIPNI codes) ---
+# Reference: http://www.saude.gov.br/fhir/r4/CodeSystem/BRImunobiologico
 MAPA_NOME_PARA_SIPNI = {
-    "BCG": "01",
-    "Hepatite B": "06",
+    "BCG": "15",
+    "Hepatite B": "9",
+    "Hepatite B (ao nascer)": "9",
+    "Hepatite B (esquema adulto)": "9",
     "Penta": "42",
-    "DTP (Tríplice Bacteriana)": "14",
+    "DTP (Tríplice Bacteriana)": "46",
     "VIP (Poliomielite)": "22",
-    "Rotavírus (VORH)": "41",
-    "Pneumocócica 10V": "17",
-    "Meningocócica C": "29",
-    "Meningocócica ACWY": "54",
+    "Rotavírus (VORH)": "45",
+    "Pneumocócica 10V": "26",
+    "Pneumocócica 23V": "21",
+    "Meningocócica C": "41",
+    "Meningocócica ACWY": "74",
     "Influenza": "33",
-    "Febre Amarela": "05",
-    "SCR (Tríplice Viral)": "21",
-    "Tetraviral (SCR-V)": "30",
-    "SCRV (Tetraviral)": "30",
-    "Varicela": "13",
-    "Varicela (atenuada)": "13",
-    "Hepatite A": "15",
-    "HPV": "49",
-    "dT (Dupla Adulto)": "37",
-    "COVID-19": "103", 
-    "COVID-19 (Pfizer)": "103",
-    "COVID-19 (Moderna)": "107",
-    "COVID-19 (Pfizer ou Moderna)": "103",
-    "COVID-19 (Reforço)": "103"
+    "Febre Amarela": "14",
+    "SCR (Tríplice Viral)": "24",
+    "Tetraviral (SCR-V)": "56",
+    "SCRV (Tetraviral)": "56",
+    "Varicela": "34",
+    "Varicela (atenuada)": "34",
+    "Hepatite A": "55",
+    "HPV": "67",
+    "dT (Dupla Adulto)": "25",
+    "Dengue": "104",
+    "COVID-19": "102",
+    "COVID-19 (Pfizer)": "102",
+    "COVID-19 (Pfizer ou Moderna)": "102",
+    "COVID-19 (Moderna)": "97",
+    "COVID-19 (Reforço)": "87",
 }
 
-# --- MAPA DE DOSES PARA ESQUEMAS COMPLETOS (FALLBACK) ---
+# --- Default dose label for completed schedules (used as FHIR fallback) ---
 MAPA_DOSE_PADRAO_COMPLETA = {
     "BCG": "Única",
     "Hepatite B (ao nascer)": "Única",
@@ -63,6 +73,7 @@ MAPA_DOSE_PADRAO_COMPLETA = {
     "VIP (Poliomielite)": "Reforço",
     "Rotavírus (VORH)": "2",
     "Pneumocócica 10V": "Reforço",
+    "Pneumocócica 23V": "2",
     "Meningocócica C": "Reforço",
     "Meningocócica ACWY": "Única",
     "Influenza": "Anual",
@@ -73,28 +84,29 @@ MAPA_DOSE_PADRAO_COMPLETA = {
     "Hepatite A": "Única",
     "HPV": "Única",
     "dT (Dupla Adulto)": "Reforço",
+    "Dengue": "2",
     "COVID-19": "Completo",
     "COVID-19 (Pfizer)": "3",
     "COVID-19 (Moderna)": "2"
 }
 
 class PlanoVacinalService:
-    def _montar_motor(self) -> Optional[KnowledgeEngine]:
-        hoje = datetime.date.today()
-
-        modulos_de_regras = [
+    def _build_engine(self) -> Optional[KnowledgeEngine]:
+        """Assemble all 15 rule modules into a single Experta KnowledgeEngine instance."""
+        rule_modules = [
             RegrasBCG, RegrasHepatiteB, RegrasPentaDTP, RegrasVip, RegrasRotavirus,
-            RegrasPneumo10, RegrasMeningo, RegrasCovid19, RegrasHepatiteA,
-            RegrasVirusVivosAtenuados, RegrasDTAdulto, RegrasHPV, RegrasInfluenza
+            RegrasPneumo10, RegrasPneumo23, RegrasMeningo, RegrasCovid19, RegrasHepatiteA,
+            RegrasVirusVivosAtenuados, RegrasDTAdulto, RegrasHPV, RegrasInfluenza,
+            RegrasDengue
         ]
 
-        if not modulos_de_regras:
+        if not rule_modules:
             return None
 
-        MotorDinamico = type('MotorDinamico', (*modulos_de_regras, KnowledgeEngine), {})
+        DynamicEngine = type('DynamicEngine', (*rule_modules, KnowledgeEngine), {})
 
         @DefFacts()
-        def _fatos_iniciais(self):
+        def _initial_facts(self):
             dn = self.paciente_dados['data_nascimento']
             hoje = datetime.date.today()
             yield Paciente(data_nascimento=dn)
@@ -104,8 +116,8 @@ class PlanoVacinalService:
             idade_dias_totais = (hoje - dn).days
 
             yield Idade(
-                dias=idade_dias_totais, 
-                meses=idade_meses_completos, 
+                dias=idade_dias_totais,
+                meses=idade_meses_completos,
                 anos=delta.years,
                 data_nascimento=dn
             )
@@ -116,11 +128,12 @@ class PlanoVacinalService:
                     data_aplicacao=vacina['data_aplicacao'],
                     dose=vacina.get('dose')
                 )
-        
-        MotorDinamico._fatos_iniciais = _fatos_iniciais
-        return MotorDinamico()
 
-    def _coletar_resultados(self, engine: KnowledgeEngine) -> dict:
+        DynamicEngine._initial_facts = _initial_facts
+        return DynamicEngine()
+
+    def _collect_results(self, engine: KnowledgeEngine) -> dict:
+        """Collect all output facts from the engine into a structured dict."""
         recomendadas = []
         aprazadas = []
         contraindicadas = []
@@ -145,7 +158,8 @@ class PlanoVacinalService:
             "vacinas_em_dia": em_dia
         }
 
-    def _converter_para_fhir_bundle(self, plano_interno: dict) -> dict:
+    def _to_fhir_bundle(self, plano_interno: dict) -> dict:
+        """Convert the internal vaccination plan dict to an HL7 FHIR Bundle."""
         bundle_id = str(uuid.uuid4())
         fhir_bundle = {
             "resourceType": "Bundle",
@@ -155,7 +169,7 @@ class PlanoVacinalService:
             "entry": []
         }
 
-        def criar_recurso_recommendation(item, status_fhir, data_criterio=None):
+        def build_recommendation_resource(item, status_fhir, data_criterio=None):
             nome_vacina = item.get('vacina', 'Desconhecida')
             codigo_sipni = MAPA_NOME_PARA_SIPNI.get(nome_vacina, "99")
 
@@ -169,7 +183,7 @@ class PlanoVacinalService:
                 "recommendation": [{
                     "vaccineCode": {
                         "coding": [{
-                            "system": "http://www.saude.gov.br/fhir/rnds/CodeSystem/br-imunobiologico",
+                            "system": "http://www.saude.gov.br/fhir/r4/CodeSystem/BRImunobiologico",
                             "code": codigo_sipni,
                             "display": nome_vacina
                         }]
@@ -191,15 +205,15 @@ class PlanoVacinalService:
 
             return {"resource": resource}
 
-        # 1. Recomendadas (Imediata)
+        # 1. Immediate recommendations
         for item in plano_interno["vacinas_recomendadas"]:
             data_criterio = [{
                 "code": {"coding": [{"system": "http://loinc.org", "code": "30980-7", "display": "Date forecast"}]},
                 "value": datetime.date.today().isoformat()
             }]
-            fhir_bundle["entry"].append(criar_recurso_recommendation(item, "due", data_criterio))
+            fhir_bundle["entry"].append(build_recommendation_resource(item, "due", data_criterio))
 
-        # 2. Aprazadas (Futuro)
+        # 2. Scheduled (future doses)
         for item in plano_interno["vacinas_aprazadas"]:
             data_min = item.get('data_minima')
             data_rec = item.get('data_recomendada')
@@ -216,48 +230,49 @@ class PlanoVacinalService:
                     "value": data_min.isoformat() if hasattr(data_min, 'isoformat') else str(data_min)
                 })
             
-            fhir_bundle["entry"].append(criar_recurso_recommendation(item, "due", criterios))
+            fhir_bundle["entry"].append(build_recommendation_resource(item, "due", criterios))
 
-        # 3. Contraindicadas
+        # 3. Contraindicated
         for item in plano_interno["vacinas_contraindicadas"]:
-            fhir_bundle["entry"].append(criar_recurso_recommendation(item, "contraindicated"))
+            fhir_bundle["entry"].append(build_recommendation_resource(item, "contraindicated"))
 
-        # 4. Em Dia
+        # 4. Up to date
         for item in plano_interno["vacinas_em_dia"]:
-            fhir_bundle["entry"].append(criar_recurso_recommendation(item, "complete"))
+            fhir_bundle["entry"].append(build_recommendation_resource(item, "complete"))
 
         return fhir_bundle
 
-    def gerar_plano_e_auditar(self, dados_paciente: dict) -> dict:
+    def generate_plan_and_audit(self, dados_paciente: dict) -> dict:
+        """Run the inference engine for a patient and persist an audit log entry."""
         paciente_info = dados_paciente['paciente']
         carteira_info = dados_paciente.get('carteira_vacinacao', [])
-        
+
         self._paciente_dados = paciente_info
         self._carteira_dados = carteira_info
 
-        engine = self._montar_motor()
+        engine = self._build_engine()
 
         if not engine:
             return {"erro": "Nenhum calendário vacinal aplicável."}
 
         setattr(engine, 'paciente_dados', self._paciente_dados)
         setattr(engine, 'carteira_dados', self._carteira_dados)
-        
+
         engine.reset()
         engine.run()
 
-        plano_interno = self._coletar_resultados(engine)
+        plano_interno = self._collect_results(engine)
 
         try:
-            plano_fhir = self._converter_para_fhir_bundle(plano_interno)
+            plano_fhir = self._to_fhir_bundle(plano_interno)
         except Exception as e:
-            print(f"Erro na conversão FHIR: {e}")
+            logger.error("FHIR conversion error: %s", e)
             return {"erro": f"Falha ao converter resposta para FHIR: {str(e)}"}
 
         try:
-            input_str = converter_datas_para_string(dados_paciente)
-            output_str = converter_datas_para_string(plano_fhir)
-            
+            input_str = convert_dates_to_str(dados_paciente)
+            output_str = convert_dates_to_str(plano_fhir)
+
             log_params = {
                 'paciente_sexo': paciente_info['sexo'],
                 'numero_doses_recebidas': len(carteira_info),
@@ -266,10 +281,10 @@ class PlanoVacinalService:
             }
             if paciente_info.get('data_nascimento'):
                 log_params['paciente_data_nascimento'] = paciente_info['data_nascimento']
-            
+
             novo_log = PlanoVacinalLogModel(**log_params)
-            log_repository.salvar_log(novo_log)
+            log_repository.save_log(novo_log)
         except Exception as e:
-            print(f"ERRO ao salvar log: {e}")
-        
+            logger.error("Failed to save audit log: %s", e)
+
         return plano_fhir

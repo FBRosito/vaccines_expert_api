@@ -12,7 +12,7 @@ from .fatos import Idade, DoseAplicada, RecomendacaoImediata, AgendamentoFuturo,
 
 class RegrasHepatiteA(_RegrasBase):
     """
-    Regras de vacinação para a Hepatite A (dose única aos 15 meses).
+    Vaccination rules for Hepatitis A (single dose at 15 months).
     """
 
     @Rule(
@@ -20,14 +20,14 @@ class RegrasHepatiteA(_RegrasBase):
         TEST(lambda a, m: (a * 12 + m) < 15),
         NOT(DoseAplicada(vacina_codigo='HEPATITE_A'))
     )
-    def regra_hepatite_a_agendar(self, dn):
+    def rule_hepatite_a_schedule(self, dn):
         """
-        (Agendamento) Para crianças < 15 meses sem dose, agenda a
-        dose única para a data exata dos 15 meses de idade.
+        (Scheduling) For children < 15 months with no dose, schedules the
+        single dose for the exact date the child turns 15 months old.
         """
         dn_data = dn.date() if isinstance(dn, datetime.datetime) else dn
         data_alvo = dn_data + relativedelta(months=15)
-        
+
         self.declare(AgendamentoFuturo(
             vacina="Hepatite A",
             dose="Única",
@@ -37,29 +37,29 @@ class RegrasHepatiteA(_RegrasBase):
         ))
 
     @Rule(
-        Idade(meses=MATCH.m, anos=MATCH.a), 
-        TEST(lambda a, m: a < 5 and (a * 12 + m) >= 15), 
+        Idade(meses=MATCH.m, anos=MATCH.a),
+        TEST(lambda a, m: a < 5 and (a * 12 + m) >= 15),
         NOT(DoseAplicada(vacina_codigo='HEPATITE_A'))
     )
-    def regra_hepatite_a_recomendar_agora(self):
+    def rule_hepatite_a_recommend_now(self):
         """
-        (Recomendação) Para crianças >= 15 meses e < 5 anos,
-        recomenda a dose única.
+        (Recommendation) For children >= 15 months and < 5 years,
+        recommends the single dose.
         """
         self.declare(RecomendacaoImediata(
-            vacina="Hepatite A", 
-            dose="Única", 
+            vacina="Hepatite A",
+            dose="Única",
             explicacao="A vacina contra Hepatite A é recomendada em dose única aos 15 meses de idade. Pode ser aplicada até os 4 anos, 11 meses e 29 dias."
         ))
-    
+
     @Rule(
         Idade(anos=MATCH.a), TEST(lambda a: a >= 5),
         NOT(DoseAplicada(vacina_codigo='HEPATITE_A'))
     )
-    def regra_hepatite_a_contraindicacao_idade(self):
+    def rule_hepatite_a_contraindicated_age(self):
         """
-        (Contraindicação) Para crianças >= 5 anos sem dose,
-        contraindica a vacina conforme a rotina do PNI.
+        (Contraindication) For children >= 5 years with no dose,
+        contraindicates the vaccine per PNI routine.
         """
         self.declare(Contraindicacao(
             vacina="Hepatite A",
@@ -71,10 +71,10 @@ class RegrasHepatiteA(_RegrasBase):
     @Rule(
         DoseAplicada(vacina_codigo='HEPATITE_A', data_aplicacao=MATCH.data_dose)
     )
-    def regra_hepatite_a_esquema_completo(self, data_dose):
+    def rule_hepatite_a_scheme_complete(self, data_dose):
         """
-        (Esquema Completo) Se a dose única da Hepatite A
-        foi aplicada, considera o esquema completo.
+        (Scheme Complete) If the single Hepatitis A dose
+        has been applied, marks the scheme as complete.
         """
         self.declare(EsquemaCompleto(
             vacina="Hepatite A",

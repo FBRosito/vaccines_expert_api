@@ -5,24 +5,24 @@ from sqlalchemy.dialects.postgresql import JSONB
 class PlanoVacinalLogModel(db.Model):
     __tablename__ = 'plano_vacinal_logs'
 
-    # --- Colunas de Auditoria ---
+    # --- Audit columns ---
     id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now())
 
-    # --- Colunas para Análise de Dados (Indexadas e Otimizadas para Queries) ---
+    # --- Analytical columns (indexed for query performance) ---
     paciente_data_nascimento = db.Column(db.Date, nullable=False, index=True)
     paciente_sexo = db.Column(db.String(20))
     numero_doses_recebidas = db.Column(db.Integer)
 
-    # --- Colunas para Rastreabilidade (Armazenamento Bruto) ---
+    # --- Traceability columns (raw FHIR payloads) ---
     request_input = db.Column(JSONB, nullable=False)
     response_output = db.Column(JSONB, nullable=False)
 
     def __repr__(self):
-        return f'<Log ID: {self.id} em {self.timestamp}>'
-    
+        return f'<Log id={self.id} at={self.timestamp}>'
+
     def to_dict(self):
-        """Serializa o objeto para JSON"""
+        """Serialise the model instance to a JSON-compatible dict."""
         return {
             "id": self.id,
             "timestamp": self.timestamp.isoformat() if self.timestamp else None,

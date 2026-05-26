@@ -1,14 +1,11 @@
 import datetime
 
-def converter_datas_para_string(obj):
-    """
-    Função recursiva para percorrer um dicionário ou lista e converter
-    todos os objetos datetime.date para strings no formato ISO.
-    """
+def convert_dates_to_str(obj):
+    """Recursively convert all datetime.date objects in a dict/list to ISO-format strings."""
     if isinstance(obj, dict):
-        return {k: converter_datas_para_string(v) for k, v in obj.items()}
+        return {k: convert_dates_to_str(v) for k, v in obj.items()}
     elif isinstance(obj, list):
-        return [converter_datas_para_string(i) for i in obj]
+        return [convert_dates_to_str(i) for i in obj]
     elif isinstance(obj, datetime.date):
         return obj.isoformat()
     return obj

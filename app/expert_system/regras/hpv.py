@@ -12,12 +12,12 @@ from .fatos import Idade, DoseAplicada, RecomendacaoImediata, AgendamentoFuturo,
 
 class RegrasHPV(_RegrasBase):
     """
-    Regras para a vacina HPV (Papilomavírus Humano).
-    Cobre o esquema de dose única para a população geral (9-19 anos).
+    Rules for the HPV vaccine (Human Papillomavirus).
+    Covers the single-dose schedule for the general population (ages 9-19).
     """
 
     # =================================================================
-    # ESQUEMA PADRÃO (DOSE ÚNICA)
+    # STANDARD SCHEDULE (SINGLE DOSE)
     # =================================================================
 
     @Rule(
@@ -25,16 +25,16 @@ class RegrasHPV(_RegrasBase):
         TEST(lambda a: a < 9),
         NOT(DoseAplicada(vacina_codigo='HPV'))
     )
-    def regra_hpv_d1_agendar(self, dn):
+    def rule_hpv_dose_1_schedule(self, dn):
         """
-        (Agendamento) Para crianças < 9 anos, agenda a
-        dose única para a data exata dos 9 anos de idade.
+        (Scheduling) For children < 9 years, schedules the
+        single dose for the exact date the child turns 9 years old.
         """
         dn_data = dn.date() if isinstance(dn, datetime.datetime) else dn
         data_alvo = dn_data + relativedelta(years=9)
-        
+
         self.declare(AgendamentoFuturo(
-            vacina="HPV", 
+            vacina="HPV",
             dose="Única",
             data_minima=data_alvo,
             data_recomendada=data_alvo,
@@ -43,13 +43,13 @@ class RegrasHPV(_RegrasBase):
 
     @Rule(
         Idade(anos=MATCH.a),
-        TEST(lambda a: a >= 9 and a < 20), 
+        TEST(lambda a: a >= 9 and a < 20),
         NOT(DoseAplicada(vacina_codigo='HPV'))
     )
-    def regra_hpv_d1_recomendar_agora_9a19_anos(self, a):
+    def rule_hpv_dose_1_recommend_now_9to19_years(self, a):
         """
-        (Recomendação) Para pessoas de 9 a 19 anos sem dose,
-        recomenda a aplicação da dose única.
+        (Recommendation) For persons aged 9 to 19 years with no dose,
+        recommends applying the single dose.
         """
         explicacao = (
             f"Paciente com {a} anos. Recomenda-se a dose única da vacina HPV."
@@ -63,16 +63,16 @@ class RegrasHPV(_RegrasBase):
         ))
 
     # =================================================================
-    # REGRAS DE CONCLUSÃO E CONTRAINDICAÇÃO
+    # COMPLETION AND CONTRAINDICATION RULES
     # =================================================================
 
     @Rule(
         DoseAplicada(vacina_codigo='HPV', data_aplicacao=MATCH.data_dose)
     )
-    def regra_hpv_esquema_completo(self, data_dose):
+    def rule_hpv_scheme_complete(self, data_dose):
         """
-        (Esquema Completo) Se qualquer dose de HPV foi aplicada,
-        considera o esquema de dose única finalizado.
+        (Scheme Complete) If any HPV dose has been applied,
+        marks the single-dose scheme as complete.
         """
         self.declare(EsquemaCompleto(
             vacina="HPV",
@@ -81,14 +81,14 @@ class RegrasHPV(_RegrasBase):
         ))
 
     @Rule(
-        Idade(anos=MATCH.a), 
+        Idade(anos=MATCH.a),
         TEST(lambda a: a >= 20),
         NOT(DoseAplicada(vacina_codigo='HPV'))
     )
-    def regra_hpv_contraindicacao_idade(self):
+    def rule_hpv_contraindicated_age(self):
         """
-        (Contraindicação) Para pessoas >= 20 anos sem dose,
-        contraindica a vacina na rotina do PNI.
+        (Contraindication) For persons >= 20 years with no dose,
+        contraindicates the vaccine under PNI routine.
         """
         self.declare(Contraindicacao(
             vacina="HPV",

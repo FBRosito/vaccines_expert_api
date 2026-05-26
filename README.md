@@ -29,7 +29,7 @@ vaccines_expert_api
 ├── app/
 │   ├── api/                   # REST Controllers (Plano Vacinal, Auditoria)
 │   ├── expert_system/         # Inference Engine & Knowledge Base
-│   │   └── regras/            # 13 Clinical modules (BCG, HPV, Covid19, Hepatite, etc.)
+│   │   └── regras/            # 15 rule modules (BCG, HPV, Covid19, Hepatite, Dengue, etc.)
 │   ├── repositories/          # Database interaction (Models, Logs)
 │   ├── schemas/               # Data validation schemas (e.g., plano_vacinal_schema)
 │   ├── services/              # Business logic (Auditoria, Plano Vacinal)
@@ -49,7 +49,7 @@ vaccines_expert_api
 
 * **Technology:** Built using Python and the `Experta` library.
 
-* **Declarative Rules:** The knowledge base is modularized into 13 distinct classes, translating the Brazilian PNI guidelines into 158 executable logical rules spanning over 2,500 lines of code.
+* **Declarative Rules:** The knowledge base is modularized into 15 rule modules, translating the Brazilian PNI guidelines into 168 executable logical rules spanning over 2,500 lines of code.
 
 * **Conflict Resolution:** Utilizes the salience feature to prioritize execution, which is crucial for handling simultaneous administration conflicts between live attenuated virus vaccines (e.g., prioritizing MMR over Yellow Fever in children under 2 years old).
 
@@ -63,6 +63,26 @@ vaccines_expert_api
 
 * **Persistence Layer:** A PostgreSQL database is implemented to record transaction logs. This allows for the future auditing of the generated recommendations.
 
+* **Normative Traceability:** The `rastreabilidade/` directory contains a traceability matrix that maps 28 IN 2026 clauses to implemented rules and test cases (25 fully covered, 3 documented extensions beyond the normative text).
+
+### 4. Validation & Testing
+
+The inference engine was validated using a four-layer strategy:
+
+| Layer | Description | Result |
+|-------|-------------|--------|
+| CE+VL | 142 deterministic equivalence-class and boundary-value test cases across 15 rule modules | 100% pass |
+| Property-based | 10 clinical invariants × 800 random examples = 8,000 executions (Hypothesis) | 0 counterexamples |
+| Synthetic cohort | N=5,000 age-distributed patients vs. independent reference oracle | F1=1.000, κ=1.000 for 6 vaccines |
+| Baseline comparison | Motor SE vs. naïve literal IN 2026 implementation | SE dominant on Influenza (κ 0.056→1.000) and COVID-19 (κ 0.180→1.000) |
+
+Additional metrics: 90% line coverage (875 statements); median inference latency 47 ms (p95: 117 ms; throughput: 19.1 req/s, isolated engine).
+
+```bash
+# Run the full test suite (requires .venv — see CLAUDE.md)
+PYTHONPATH=tests .venv/bin/pytest tests/ -q
+```
+
 ## 🛠️ Installation & Usage
 
 The project is fully containerized. To run the API, the Expert System, and the PostgreSQL database locally, you only need Docker and Docker Compose installed.
@@ -70,8 +90,8 @@ The project is fully containerized. To run the API, the Expert System, and the P
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/FBRosito/api_vacinas.git
-cd api_vacinas
+git clone https://github.com/FBRosito/vaccines_expert_api.git
+cd vaccines_expert_api
 ```
 
 ### 2. Build and Run via Docker

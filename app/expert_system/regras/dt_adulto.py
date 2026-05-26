@@ -1,6 +1,6 @@
 import datetime
 from typing import TYPE_CHECKING
-from experta import Rule, MATCH, NOT, OR, TEST, P, KnowledgeEngine
+from experta import Rule, MATCH, NOT, OR, TEST, KnowledgeEngine
 from dateutil.relativedelta import relativedelta
 
 if TYPE_CHECKING:
@@ -12,14 +12,14 @@ from .fatos import Idade, DoseAplicada, RecomendacaoImediata, AgendamentoFuturo,
 
 class RegrasDTAdulto(_RegrasBase):
     """
-    Regras para a vacina dT (Dupla Adulto) a partir dos 7 anos.
-    Cobre:
-    1. Esquema de catch-up (3 doses) para não vacinados na infância.
-    2. Reforços decenais (a cada 10 anos) para todos.
+    Rules for the dT vaccine (Adult Double) from age 7 onwards.
+    Covers:
+    1. Catch-up schedule (3 doses) for individuals not vaccinated in childhood.
+    2. Decennial boosters (every 10 years) for everyone.
     """
 
     # =================================================================
-    # REGRAS DE CATCH-UP (ESQUEMA PRIMÁRIO TARDIO)
+    # CATCH-UP RULES (LATE PRIMARY SCHEDULE)
     # =================================================================
 
     @Rule(
@@ -27,10 +27,10 @@ class RegrasDTAdulto(_RegrasBase):
         NOT(DoseAplicada(vacina_codigo='dT')),
         NOT(EsquemaCompleto(vacina="DTP (Tríplice Bacteriana)"))
     )
-    def regra_dt_catchup_d1_recomendar(self, a):
+    def rule_dt_catch_up_dose_1_recommend(self, a):
         """
-        (Recomendação) Para >= 7 anos sem histórico vacinal básico
-        (nem infantil, nem adulto), recomenda início imediato com dT.
+        (Recommendation) For patients >= 7 years with no basic vaccination history
+        (neither childhood nor adult), recommends starting immediately with dT.
         """
         self.declare(RecomendacaoImediata(
             vacina="dT (Dupla Adulto)",
@@ -44,17 +44,18 @@ class RegrasDTAdulto(_RegrasBase):
         NOT(DoseAplicada(vacina_codigo='dT', dose=2)),
         NOT(EsquemaCompleto(vacina="DTP (Tríplice Bacteriana)"))
     )
-    def regra_dt_catchup_d2_agendar(self, d1):
+    def rule_dt_catch_up_dose_2_schedule(self, d1):
         """
-        (Agendamento) Agenda D2 do catch-up.
-        Intervalo Recomendado: 60 dias (2 meses).
-        Intervalo Mínimo: 30 dias.
+        (Scheduling) Schedules dose 2 of the catch-up.
+        Recommended interval: 60 days (2 months).
+        Minimum interval: 30 days.
         """
+        d1_base = d1.date() if isinstance(d1, datetime.datetime) else d1
         self.declare(AgendamentoFuturo(
             vacina="dT (Dupla Adulto)",
             dose="2ª Dose (Esquema tardio)",
-            data_minima=d1.date() + relativedelta(days=30),
-            data_recomendada=d1.date() + relativedelta(days=60),
+            data_minima=d1_base + relativedelta(days=30),
+            data_recomendada=d1_base + relativedelta(days=60),
             explicacao="A 2ª dose de dT é recomendada 60 dias após a primeira (mínimo de 30 dias)."
         ))
 
@@ -69,11 +70,11 @@ class RegrasDTAdulto(_RegrasBase):
         NOT(AgendamentoFuturo(vacina="dT (Dupla Adulto)", dose="3ª Dose (Esquema tardio)")),
         NOT(EsquemaCompleto(vacina="DTP (Tríplice Bacteriana)"))
     )
-    def regra_dt_catchup_d3_agendar_proativo(self, d2_data):
+    def rule_dt_catch_up_dose_3_schedule_proactive(self, d2_data):
         """
-        (Agendamento Proativo) Agenda D3 do catch-up com base na D2 (real ou planejada).
-        Intervalo Recomendado: 60 dias após D2.
-        Intervalo Mínimo: 30 dias após D2.
+        (Proactive Scheduling) Schedules dose 3 of the catch-up based on dose 2 (actual or planned).
+        Recommended interval: 60 days after dose 2.
+        Minimum interval: 30 days after dose 2.
         """
         d2_resolvida = d2_data.date() if isinstance(d2_data, datetime.datetime) else d2_data
 
@@ -89,19 +90,19 @@ class RegrasDTAdulto(_RegrasBase):
         DoseAplicada(vacina_codigo='dT', dose=3, data_aplicacao=MATCH.d3_data),
         NOT(EsquemaCompleto(vacina="DTP (Tríplice Bacteriana)"))
     )
-    def regra_dt_catchup_esquema_completo(self, d3_data):
+    def rule_dt_catch_up_scheme_complete(self, d3_data):
         """
-        (Esquema Completo) Finaliza o esquema primário tardio
-        após a 3ª dose de dT.
+        (Scheme Complete) Finalizes the late primary schedule
+        after the 3rd dose of dT.
         """
         self.declare(EsquemaCompleto(
             vacina="dT (Dupla Adulto)",
             explicacao="Esquema primário tardio de 3 doses de dT finalizado.",
-            data_ultima_dose=d3_data.date()
+            data_ultima_dose=d3_data.date() if isinstance(d3_data, datetime.datetime) else d3_data
         ))
 
     # =================================================================
-    # REGRAS DE REFORÇO DECENAL (A CADA 10 ANOS)
+    # DECENNIAL BOOSTER RULES (EVERY 10 YEARS)
     # =================================================================
 
     @Rule(
@@ -113,42 +114,51 @@ class RegrasDTAdulto(_RegrasBase):
         NOT(DoseAplicada(vacina_codigo='dT', dose="Reforço")),
         NOT(DoseAplicada(vacina_codigo='dT', dose=4))
     )
-    def regra_dt_primeiro_reforco_agendar(self, ult_dose_esquema):
+    def rule_dt_first_booster_schedule(self, ult_dose_esquema):
         """
-        (Agendamento) Agenda o primeiro reforço decenal 10 anos
-        após a conclusão de qualquer esquema primário (infantil ou tardio).
+        First decennial booster 10 years after the primary schedule.
+        If the deadline has already passed, recommends immediately.
         """
         data_alvo = ult_dose_esquema + relativedelta(years=10)
-        
-        self.declare(AgendamentoFuturo(
-            vacina="dT (Dupla Adulto)",
-            dose="Reforço Decenal",
-            data_minima=data_alvo,
-            data_recomendada=data_alvo,
-            explicacao=f"Reforço recomendado 10 anos após a última dose do esquema básico ({ult_dose_esquema.strftime('%d/%m/%Y')})."
-        ))
+        hoje = datetime.date.today()
+        if data_alvo <= hoje:
+            self.declare(RecomendacaoImediata(
+                vacina="dT (Dupla Adulto)",
+                dose="Reforço Decenal",
+                explicacao=f"Reforço decenal vencido. Último esquema básico concluído em {ult_dose_esquema.strftime('%d/%m/%Y')}."
+            ))
+        else:
+            self.declare(AgendamentoFuturo(
+                vacina="dT (Dupla Adulto)",
+                dose="Reforço Decenal",
+                data_minima=data_alvo,
+                data_recomendada=data_alvo,
+                explicacao=f"Reforço recomendado 10 anos após a última dose do esquema básico ({ult_dose_esquema.strftime('%d/%m/%Y')})."
+            ))
 
     @Rule(
         Idade(anos=MATCH.a), TEST(lambda a: a >= 7),
-        OR(
-            DoseAplicada(vacina_codigo='dT', dose="Reforço", data_aplicacao=MATCH.ult_reforco),
-            DoseAplicada(vacina_codigo='dT', dose=MATCH.n, data_aplicacao=MATCH.ult_reforco),
-        ),
-        TEST(lambda n: isinstance(n, str) or (isinstance(n, int) and n >= 4)),
-        NOT(DoseAplicada(vacina_codigo='dT', data_aplicacao=P(lambda d: d > ult_reforco))) # type: ignore
+        DoseAplicada(vacina_codigo='dT', dose="Reforço", data_aplicacao=MATCH.ult_reforco),
     )
-    def regra_dt_reforco_subsequente_agendar(self, ult_reforco):
+    def rule_dt_subsequent_booster_schedule(self, ult_reforco):
         """
-        (Agendamento) Agenda o PRÓXIMO reforço decenal 10 anos
-        após o último reforço aplicado.
+        Next decennial booster 10 years after the last applied booster.
+        If overdue, recommends immediately.
         """
         data_base = ult_reforco.date() if isinstance(ult_reforco, datetime.datetime) else ult_reforco
         data_alvo = data_base + relativedelta(years=10)
-
-        self.declare(AgendamentoFuturo(
-            vacina="dT (Dupla Adulto)",
-            dose="Reforço Decenal",
-            data_minima=data_alvo,
-            data_recomendada=data_alvo,
-            explicacao=f"Reforço recomendado a cada 10 anos. Último foi em {data_base.strftime('%d/%m/%Y')}."
-        ))
+        hoje = datetime.date.today()
+        if data_alvo <= hoje:
+            self.declare(RecomendacaoImediata(
+                vacina="dT (Dupla Adulto)",
+                dose="Reforço Decenal",
+                explicacao=f"Reforço decenal vencido. Último reforço aplicado em {data_base.strftime('%d/%m/%Y')}."
+            ))
+        else:
+            self.declare(AgendamentoFuturo(
+                vacina="dT (Dupla Adulto)",
+                dose="Reforço Decenal",
+                data_minima=data_alvo,
+                data_recomendada=data_alvo,
+                explicacao=f"Reforço recomendado a cada 10 anos. Último foi em {data_base.strftime('%d/%m/%Y')}."
+            ))

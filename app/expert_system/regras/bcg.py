@@ -9,15 +9,11 @@ else:
 from .fatos import Idade, DoseAplicada, RecomendacaoImediata, Contraindicacao, EsquemaCompleto
 
 class RegrasBCG(_RegrasBase):
-    """
-    Regras de vacinação para a BCG.
-    """
+    """Vaccination rules for BCG (IN 2026 §1). Single-dose, birth to 4y 11m 29d."""
 
     @Rule(Idade(anos=MATCH.a), TEST(lambda a: a < 5), NOT(DoseAplicada(vacina_codigo='BCG')))
-    def regra_bcg_recomendar_agora(self):
-        """
-        (Recomendação) Para crianças < 5 anos sem dose, recomenda a aplicação imediata.
-        """
+    def rule_bcg_recommend_now(self):
+        """(Recommendation) Child < 5 years with no prior BCG dose: recommend immediate application."""
         self.declare(RecomendacaoImediata(
             vacina="BCG",
             dose="Única",
@@ -25,20 +21,16 @@ class RegrasBCG(_RegrasBase):
         ))
 
     @Rule(DoseAplicada(vacina_codigo='BCG'))
-    def regra_bcg_esquema_ok(self):
-        """
-        (Esquema Completo) Se a dose de BCG foi aplicada, considera o esquema completo.
-        """
+    def rule_bcg_scheme_complete(self):
+        """(Schedule complete) BCG dose on record: mark scheme as finished."""
         self.declare(EsquemaCompleto(
             vacina="BCG",
             explicacao="Esquema de dose única finalizado. Crianças vacinadas que não apresentam cicatriz não devem ser revacinadas."
         ))
 
     @Rule(Idade(anos=MATCH.a), TEST(lambda a: a >= 5), NOT(DoseAplicada(vacina_codigo='BCG')))
-    def regra_bcg_contraindicacao_idade(self):
-        """
-        (Contraindicação) Para crianças >= 5 anos sem dose, contraindica a aplicação.
-        """
+    def rule_bcg_contraindicated_by_age(self):
+        """(Contraindication) Child >= 5 years with no prior BCG dose: contraindicated by age limit."""
         self.declare(Contraindicacao(
             vacina="BCG",
             dose="Única",

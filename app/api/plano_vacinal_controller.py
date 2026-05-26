@@ -1,38 +1,69 @@
+import logging
 from flask import jsonify, request
 from app import limiter
 from marshmallow import ValidationError
 from . import api_bp
 from datetime import date, datetime
 
+logger = logging.getLogger(__name__)
+
 from app.schemas.plano_vacinal_schema import FHIRBundleSchema
 from app.services.plano_vacinal_service import PlanoVacinalService
 
-# --- MAPA DE TRADUÇÃO: CÓDIGOS SIPNI (RNDS) -> CÓDIGOS INTERNOS (REGRAS) ---
+# --- SIPNI (RNDS) code → internal rule engine code translation map ---
+# Reference: http://www.saude.gov.br/fhir/r4/CodeSystem/BRImunobiologico
 DE_PARA_SIPNI_INTERNO = {
-    "01": "BCG",
-    "06": "HEPATITE_B",
-    "42": "PENTA",
-    "14": "DTP",
-    "22": "VIP",
-    "41": "VORH",
-    "17": "PNEUMO10",
-    "29": "MEN_C",
-    "54": "MEN_ACWY",
-    "33": "INFLUENZA",
-    "05": "FEBRE_AMARELA",
-    "21": "SCR",
-    "30": "TETRAVIRAL",
-    "13": "VARICELA",
-    "15": "HEPATITE_A",
-    "49": "HPV",
-    "37": "dT",
-    # Vacinas COVID-19 Específicas
-    "103": "COVID19_PFIZER",
-    "107": "COVID19_MODERNA"
+    # ======================================================================
+    # Official SIPNI codes (BRImunobiologico code system)
+    # ======================================================================
+    "15": "BCG",                # BCG
+    "9":  "HEPATITE_B",         # Hepatite B recombinante
+    "42": "PENTA",              # Penta (DTP/HB/Hib)
+    "46": "DTP",                # DTP (Tríplice Bacteriana)
+    "22": "VIP",                # Poliomielite Inativada
+    "45": "VORH",               # Rotavírus Humano G1P[8]
+    "26": "PNEUMO10",           # Pneumocócica 10V conjugada
+    "41": "MEN_C",              # Meningocócica C conjugada
+    "74": "MEN_ACWY",           # Meningocócica ACWY conjugada
+    "33": "INFLUENZA",          # Influenza trivalente
+    "14": "FEBRE_AMARELA",      # Febre Amarela atenuada
+    "24": "SCR",                # Tríplice Viral (SCR)
+    "56": "TETRAVIRAL",         # Tetraviral (SCR-V)
+    "34": "VARICELA",           # Varicela atenuada
+    "55": "HEPATITE_A",         # Hepatite A inativada infantil
+    "67": "HPV",                # HPV quadrivalente (6, 11, 16, 18)
+    "25": "dT",                 # Difteria e Tétano adulto
+    "21": "PNEUMO23",           # Pneumocócica 23V (VPP23)
+    "104": "DENGUE",            # Dengue atenuada (Qdenga)
+    # COVID-19 — multiple formulations mapped to a unified internal code
+    "102": "COVID19_PFIZER",    # COVID-19 Pfizer pediátrica <5 anos
+    "87":  "COVID19_PFIZER",    # COVID-19 Pfizer adulto (Comirnaty)
+    "103": "COVID19_PFIZER",    # COVID-19 Pfizer bivalente
+    "97":  "COVID19_MODERNA",   # COVID-19 Moderna (Spikevax)
+    "105": "COVID19_MODERNA",   # COVID-19 Moderna bivalente
+    # ======================================================================
+    # Legacy codes (backward compatibility — no key conflicts)
+    # ======================================================================
+    "01": "BCG",                # legado: usar "15"
+    "06": "HEPATITE_B",         # legado: usar "9"
+    "05": "FEBRE_AMARELA",      # legado: usar "14"
+    "17": "PNEUMO10",           # legado: usar "26"
+    "29": "MEN_C",              # legado: usar "41"
+    "54": "MEN_ACWY",           # legado: usar "74"
+    "30": "TETRAVIRAL",         # legado: usar "56"
+    "13": "VARICELA",           # legado: usar "34"
+    "49": "HPV",                # legado: usar "67"
+    "37": "dT",                 # legado: usar "25"
+    # Removidos (conflito com código oficial de outra vacina):
+    # "21" era SCR → SCR usa "24"; "21" agora é PNEUMO23
+    # "107" era COVID19_MODERNA → "107" é VPC20 (Pneumo20); Moderna usa "97"
+    # "41" era VORH → "41" agora é MEN_C; VORH usa "45"
+    # "14" era DTP → "14" agora é FEBRE_AMARELA; DTP usa "46"
+    # "15" era HEPATITE_A → "15" agora é BCG; Hepatite A usa "55"
 }
 
 def _parse_data_iso(data_str):
-    """Converte string ISO (YYYY-MM-DD ou YYYY-MM-DDTHH:MM:SS) para objeto date."""
+    """Parse an ISO date string (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS) to a date object."""
     if not data_str:
         return None
     if isinstance(data_str, (date, datetime)):
@@ -45,9 +76,8 @@ def _parse_data_iso(data_str):
 
 def _adaptar_fhir_para_interno(fhir_data):
     """
-    Função Adaptadora (Anti-Corruption Layer).
-    Converte o Bundle FHIR (padrão RNDS) para o formato plano interno que o Service espera.
-    Realiza o parsing explícito de datas (String -> Date Object).
+    Anti-Corruption Layer: convert an RNDS-compliant FHIR Bundle to the flat internal
+    dict format that PlanoVacinalService expects. Performs explicit date parsing (str → date).
     """
     paciente = None
     carteira = []
@@ -57,7 +87,7 @@ def _adaptar_fhir_para_interno(fhir_data):
         r_type = resource.get('resourceType')
 
         if r_type == 'Patient':
-            # Mapeia Patient FHIR -> Objeto Paciente Interno
+            # Map FHIR Patient → internal patient dict
             sexo_map = {
                 'male': 'Masculino', 
                 'female': 'Feminino', 
@@ -73,7 +103,7 @@ def _adaptar_fhir_para_interno(fhir_data):
             }
         
         elif r_type == 'Immunization':
-            # Mapeia Immunization FHIR -> DoseAplicada Interna
+            # Map FHIR Immunization → internal DoseAplicada dict
             
             codings = resource.get('vaccineCode', {}).get('coding', [])
             codigo_sipni = codings[0].get('code') if codings else None
@@ -99,24 +129,22 @@ def _adaptar_fhir_para_interno(fhir_data):
 
 @limiter.limit("10 per minute")
 @api_bp.route('/simulador/plano-vacinal', methods=['POST'])
-def obter_plano_vacinal():
-    """
-    Endpoint FHIR-Compliant (RNDS).
-    """
-    print(f"Rota /simulador/plano-vacinal (FHIR RNDS) acessada.")
+def get_vaccination_plan():
+    """FHIR-compliant endpoint (RNDS). Accepts a FHIR Bundle and returns an ImmunizationRecommendation Bundle."""
+    logger.info("POST /simulador/plano-vacinal accessed.")
 
     json_data = request.get_json()
     if not json_data:
         return jsonify({"erros": "Nenhum dado fornecido."}), 400
 
-    # 1. Validação Estrutural (FHIR Schema)
+    # 1. Structural validation (FHIR schema)
     schema = FHIRBundleSchema()
     try:
         dados_fhir_validos = schema.load(json_data)
     except ValidationError as err:
         return jsonify({"erros": err.messages, "tipo": "Erro de Validação FHIR"}), 400
-    
-    # 2. Adaptação (FHIR -> Modelo Interno com objetos Python)
+
+    # 2. Adapt FHIR Bundle → internal Python object model
     try:
         dados_internos = _adaptar_fhir_para_interno(dados_fhir_validos)
         
@@ -129,13 +157,12 @@ def obter_plano_vacinal():
     except Exception as e:
         return jsonify({"erros": f"Erro ao processar dados FHIR: {str(e)}"}), 400
 
-    # 3. Execução do Serviço (Motor de Regras)
+    # 3. Run the inference engine
     servico = PlanoVacinalService()
-    plano = servico.gerar_plano_e_auditar(dados_internos)
+    plano = servico.generate_plan_and_audit(dados_internos)
 
     if not plano:
         return jsonify({"erros": "Erro interno ao gerar o plano."}), 500
 
-    print(f"Plano vacinal gerado com sucesso.")
-    
+    logger.info("Vaccination plan generated successfully.")
     return jsonify(plano)

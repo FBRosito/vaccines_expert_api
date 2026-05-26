@@ -4,13 +4,14 @@ from experta import Fact, Field
 
 
 class Paciente(Fact):
-    """Fato que representa o paciente."""
+    """Input fact representing the patient."""
     data_nascimento = Field(datetime.date, mandatory=True)
 
 class Idade(Fact):
     """
-    Fato com a idade calculada do paciente.
-    Inclui data_nascimento para regras de agendamento futuro baseadas em idade.
+    Input fact with the patient's computed age.
+    Includes data_nascimento so future-scheduling rules can anchor dates to birth date.
+    Note: `meses` stores total months (years * 12 + remaining months), not remainder alone.
     """
     anos = Field(int, mandatory=True)
     meses = Field(int, mandatory=True)
@@ -18,19 +19,19 @@ class Idade(Fact):
     data_nascimento = Field(datetime.date, mandatory=True)
 
 class DoseAplicada(Fact):
-    """Fato que representa uma dose de vacina já administrada."""
+    """Input fact representing a previously administered vaccine dose."""
     vacina_codigo = Field(str, mandatory=True)
     data_aplicacao = Field(datetime.date, mandatory=True)
     dose = Field(Or(str, int), mandatory=True)
 
 class RecomendacaoImediata(Fact):
-    """Resultado: O paciente deve tomar esta vacina agora."""
+    """Output fact: the patient should receive this vaccine today."""
     vacina = Field(str, mandatory=True)
     dose = Field(Or(str, int), mandatory=True)
     explicacao = Field(str, mandatory=True)
 
 class AgendamentoFuturo(Fact):
-    """Resultado: O paciente deve agendar esta vacina para o futuro."""
+    """Output fact: the patient should schedule this vaccine for a future date."""
     vacina = Field(str, mandatory=True)
     dose = Field(Or(str, int), mandatory=True)
     data_minima = Field(datetime.date, mandatory=True)
@@ -38,21 +39,18 @@ class AgendamentoFuturo(Fact):
     explicacao = Field(str, mandatory=True)
 
 class Contraindicacao(Fact):
-    """Resultado: O paciente não pode tomar esta vacina."""
+    """Output fact: this vaccine is contraindicated for the patient."""
     vacina = Field(str, mandatory=True)
     dose = Field(Or(str, int), mandatory=False)
     motivo = Field(str, mandatory=True)
     explicacao = Field(str, mandatory=True)
 
 class EsquemaCompleto(Fact):
-    """Resultado: O esquema desta vacina está em dia."""
+    """Output fact: the vaccination schedule for this vaccine is complete/up to date."""
     vacina = Field(str, mandatory=True)
     explicacao = Field(str, mandatory=True)
     data_ultima_dose = Field(datetime.date, mandatory=False)
 
 class ConflitoResolvido(Fact):
-    """
-    Fato interno para gerenciar a lógica de priorização
-    (ex: SCR vs Febre Amarela).
-    """
+    """Internal fact used to track resolved live-virus conflicts (e.g. SCR vs Febre Amarela)."""
     vacinas = Field([str], mandatory=True)

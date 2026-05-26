@@ -10,32 +10,32 @@ else:
 
 from .fatos import Idade, DoseAplicada, RecomendacaoImediata, AgendamentoFuturo, Contraindicacao, EsquemaCompleto
 
-# --- FUNÇÃO AUXILIAR ---
+# --- HELPER FUNCTION ---
 def to_date(d):
-    """Converte datetime para date se necessário."""
+    """Converts datetime to date if necessary."""
     if isinstance(d, datetime.datetime):
         return d.date()
     return d
 
 class RegrasMeningo(_RegrasBase):
     """
-    Regras de vacinação para Meningocócica C (infantil)
-    e Meningocócica ACWY (reforço infantil e adolescente).
+    Vaccination rules for Meningococcal C (infant)
+    and Meningococcal ACWY (infant booster and adolescent).
     """
 
     # =================================================================
-    # MENINGOCÓCICA C - ESQUEMA PRIMÁRIO (3 E 5 MESES)
+    # MENINGOCOCCAL C - PRIMARY SCHEME (3 AND 5 MONTHS)
     # =================================================================
 
     @Rule(
-        Idade(meses=MATCH.m, dias=MATCH.d, data_nascimento=MATCH.dn), 
-        TEST(lambda m: m < 3), 
+        Idade(meses=MATCH.m, dias=MATCH.d, data_nascimento=MATCH.dn),
+        TEST(lambda m: m < 3),
         NOT(DoseAplicada(vacina_codigo='MEN_C', dose=1))
     )
-    def regra_menc_d1_agendar(self, dn):
+    def rule_menc_dose_1_schedule(self, dn):
         dn_data = to_date(dn)
         data_agendada = dn_data + relativedelta(months=3)
-        
+
         self.declare(AgendamentoFuturo(
             vacina="Meningocócica C",
             dose=1,
@@ -45,17 +45,17 @@ class RegrasMeningo(_RegrasBase):
         ))
 
     @Rule(
-        Idade(meses=MATCH.m, anos=MATCH.a), 
-        TEST(lambda a, m: a == 0 and m >= 3), 
+        Idade(meses=MATCH.m, anos=MATCH.a),
+        TEST(lambda a, m: a == 0 and m >= 3),
         NOT(DoseAplicada(vacina_codigo='MEN_C', dose=1))
     )
-    def regra_menc_d1_recomendar_agora_menor1ano(self, m):
+    def rule_menc_dose_1_recommend_now_under_1y(self, m):
         self.declare(RecomendacaoImediata(
             vacina="Meningocócica C", dose=1,
             explicacao=f"Paciente com {m} meses. A 1ª dose da Meningocócica C é recomendada aos 3 meses."
         ))
 
-    # Agendar D2 (Futuro)
+    # Schedule dose 2 (future)
     @Rule(
         Idade(anos=MATCH.a), TEST(lambda a: a == 0),
         OR(
@@ -66,7 +66,7 @@ class RegrasMeningo(_RegrasBase):
         NOT(AgendamentoFuturo(vacina="Meningocócica C", dose=2)),
         TEST(lambda d1_data: datetime.date.today() < (to_date(d1_data) + relativedelta(months=2)))
     )
-    def regra_menc_d2_agendar(self, d1_data):
+    def rule_menc_dose_2_schedule(self, d1_data):
         data_base = to_date(d1_data)
         self.declare(AgendamentoFuturo(
             vacina="Meningocócica C", dose=2,
@@ -75,22 +75,22 @@ class RegrasMeningo(_RegrasBase):
             explicacao="A 2ª dose da Meningocócica C é agendada 2 meses após a 1ª dose."
         ))
 
-    # Recomendar D2 (Agora - Apenas para < 12 meses)
+    # Recommend dose 2 now (only for < 12 months)
     @Rule(
         Idade(anos=MATCH.a), TEST(lambda a: a == 0),
         DoseAplicada(vacina_codigo='MEN_C', dose=1, data_aplicacao=MATCH.d1),
         TEST(lambda d1: (datetime.date.today() >= (to_date(d1) + relativedelta(days=30)))),
         NOT(DoseAplicada(vacina_codigo='MEN_C', dose=2))
     )
-    def regra_menc_d2_recomendar_agora_atrasada(self):
+    def rule_menc_dose_2_recommend_now_late(self):
         self.declare(RecomendacaoImediata(
-            vacina="Meningocócica C", 
+            vacina="Meningocócica C",
             dose=2,
             explicacao="A 2ª dose da Meningocócica C está atrasada. Aplicar agora (intervalo mínimo de 30 dias)."
         ))
-    
+
     # =================================================================
-    # MENINGOCÓCICA ACWY - CATCH-UP / PRIMOVACINAÇÃO 1-4 ANOS
+    # MENINGOCOCCAL ACWY - CATCH-UP / PRIMARY VACCINATION 1-4 YEARS
     # =================================================================
 
     @Rule(
@@ -98,10 +98,10 @@ class RegrasMeningo(_RegrasBase):
         NOT(DoseAplicada(vacina_codigo='MEN_C')),
         NOT(DoseAplicada(vacina_codigo='MEN_ACWY'))
     )
-    def regra_menacwy_catchup_direto(self, a):
+    def rule_menacwy_catch_up_direct(self, a):
         """
-        Para 1-4 anos SEM histórico: Recomenda ACWY Dose Única diretamente.
-        Isso garante proteção contra 4 sorogrupos e simplifica o esquema tardio.
+        For ages 1-4 WITHOUT prior history: recommends ACWY single dose directly.
+        This ensures protection against 4 serogroups and simplifies the late scheme.
         """
         self.declare(RecomendacaoImediata(
             vacina="Meningocócica ACWY",
@@ -110,10 +110,10 @@ class RegrasMeningo(_RegrasBase):
         ))
 
     # =================================================================
-    # MENINGOCÓCICA ACWY - REFORÇO INFANTIL (12 meses - 4 anos)
+    # MENINGOCOCCAL ACWY - INFANT BOOSTER (12 months - 4 years)
     # =================================================================
-    
-    # 1. Agendar Reforço ACWY (Para quem tem < 12 meses e já tem Men-C D2)
+
+    # 1. Schedule ACWY booster (for patients < 12 months who already have Men-C dose 2)
     @Rule(
         Idade(meses=MATCH.m, anos=MATCH.a, data_nascimento=MATCH.dn),
         TEST(lambda a, m: (a * 12 + m) < 12),
@@ -124,14 +124,14 @@ class RegrasMeningo(_RegrasBase):
         NOT(DoseAplicada(vacina_codigo='MEN_ACWY')),
         NOT(AgendamentoFuturo(vacina="Meningocócica ACWY", dose="Reforço"))
     )
-    def regra_menacwy_infantil_agendar(self, d2_data, dn):
+    def rule_menacwy_infant_schedule(self, d2_data, dn):
         d2_res = to_date(d2_data)
         dn_res = to_date(dn)
-        
+
         data_12m = dn_res + relativedelta(months=12)
         data_int = d2_res + relativedelta(days=60)
         data_final = max(data_12m, data_int)
-        
+
         self.declare(AgendamentoFuturo(
             vacina="Meningocócica ACWY",
             dose="Reforço",
@@ -140,7 +140,7 @@ class RegrasMeningo(_RegrasBase):
             explicacao="Reforço preferencial com Meningo ACWY aos 12 meses."
         ))
 
-    # 2. Recomendar ACWY AGORA (Reforço para 1-4 anos com histórico de Men-C)
+    # 2. Recommend ACWY NOW (booster for 1-4 years with Men-C history)
     @Rule(
         Idade(anos=MATCH.a), TEST(lambda a: a >= 1 and a < 5),
         OR(
@@ -148,10 +148,10 @@ class RegrasMeningo(_RegrasBase):
             DoseAplicada(vacina_codigo='MEN_C', dose=2, data_aplicacao=MATCH.d_antiga),
             DoseAplicada(vacina_codigo='MEN_C', dose="Única", data_aplicacao=MATCH.d_antiga)
         ),
-        TEST(lambda d_antiga: datetime.date.today() >= (to_date(d_antiga) + relativedelta(days=30))), 
+        TEST(lambda d_antiga: datetime.date.today() >= (to_date(d_antiga) + relativedelta(days=30))),
         NOT(DoseAplicada(vacina_codigo='MEN_ACWY'))
     )
-    def regra_menacwy_infantil_recomendar_agora(self, a):
+    def rule_menacwy_infant_recommend_now(self, a):
         self.declare(RecomendacaoImediata(
             vacina="Meningocócica ACWY",
             dose="Reforço",
@@ -159,16 +159,16 @@ class RegrasMeningo(_RegrasBase):
         ))
 
     # =================================================================
-    # MENINGOCÓCICA ACWY - ADOLESCENTE (11-14 ANOS)
+    # MENINGOCOCCAL ACWY - ADOLESCENT (11-14 YEARS)
     # =================================================================
-    
-    # Agendar para 11 anos
+
+    # Schedule for 11 years
     @Rule(
         Idade(anos=MATCH.a, data_nascimento=MATCH.dn),
         TEST(lambda a: a >= 5 and a < 11),
         NOT(DoseAplicada(vacina_codigo='MEN_ACWY', dose=1))
     )
-    def regra_menacwy_adolescente_agendar(self, dn):
+    def rule_menacwy_adolescent_schedule(self, dn):
         dn_data = to_date(dn)
         data_alvo = dn_data + relativedelta(years=11)
 
@@ -180,13 +180,13 @@ class RegrasMeningo(_RegrasBase):
             explicacao="Agendamento da dose de rotina para adolescentes (11 a 14 anos)."
         ))
 
-    # Recomendação Imediata Adolescente (11-14 anos)
+    # Immediate recommendation for adolescents (11-14 years)
     @Rule(
         Idade(anos=MATCH.a),
         TEST(lambda a: a >= 11 and a < 15),
         NOT(DoseAplicada(vacina_codigo='MEN_ACWY'))
     )
-    def regra_menacwy_adolescente_recomendar(self, a):
+    def rule_menacwy_adolescent_recommend(self, a):
         self.declare(RecomendacaoImediata(
             vacina="Meningocócica ACWY",
             dose="Dose Única (Adolescente)",
@@ -194,7 +194,7 @@ class RegrasMeningo(_RegrasBase):
         ))
 
     # =================================================================
-    # CONCLUSÕES
+    # CONCLUSIONS
     # =================================================================
 
     @Rule(
@@ -202,7 +202,7 @@ class RegrasMeningo(_RegrasBase):
         Idade(anos=MATCH.a),
         TEST(lambda a: a >= 11)
     )
-    def regra_menacwy_adolescente_completo(self, d_acwy):
+    def rule_menacwy_adolescent_scheme_complete(self, d_acwy):
         self.declare(EsquemaCompleto(
             vacina="Meningocócica ACWY",
             explicacao="Esquema encerrado com a dose de Meningocócica ACWY.",
@@ -214,20 +214,20 @@ class RegrasMeningo(_RegrasBase):
         Idade(anos=MATCH.a),
         TEST(lambda a: a < 5)
     )
-    def regra_menacwy_infantil_completo(self, d_acwy):
+    def rule_menacwy_infant_scheme_complete(self, d_acwy):
         self.declare(EsquemaCompleto(
-            vacina="Meningocócica C", 
+            vacina="Meningocócica C",
             explicacao="Esquema encerrado com a dose de Meningocócica ACWY.",
             data_ultima_dose=to_date(d_acwy)
         ))
-    
+
     @Rule(
         Idade(anos=MATCH.a), TEST(lambda a: a >= 5 and a < 11),
         NOT(DoseAplicada(vacina_codigo='MEN_C', dose=3)),
         NOT(DoseAplicada(vacina_codigo='MEN_ACWY'))
     )
-    def regra_menc_contraindicacao_idade(self):
-        """Contraindicação Men-C > 5 anos (se não tomou reforço, perdeu oportunidade infantil)."""
+    def rule_menc_contraindicated_age(self):
+        """Contraindication Men-C > 5 years (if booster was not given, the infant window was missed)."""
         self.declare(Contraindicacao(
             vacina="Meningocócica C",
             dose="Reforço",
