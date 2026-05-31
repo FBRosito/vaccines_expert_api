@@ -13,8 +13,8 @@ def test_hb01_nascido_hoje_recomendar_ao_nascer():
     assert any('Hepatite B' in v for v in get_recommended(r))
 
 
-def test_hb02_1m_sem_dose_recomendar():
-    r = run_engine(birth_date_ago(months=1))
+def test_hb02_15d_sem_dose_recomendar():
+    r = run_engine(birth_date_ago(days=15))
     assert any('Hepatite B' in v for v in get_recommended(r))
 
 
