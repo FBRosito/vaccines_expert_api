@@ -1,7 +1,7 @@
 """
-Testes CE+VL para RegrasMeningo — IN 2026 §7 e §11.
-Meningo C: infantil (3m, 5m, 12m).
-Meningo ACWY: adolescentes 11–14a.
+CE+VL tests for RegrasMeningo — IN 2026 §7 and §11.
+Meningo C: pediatric (3m, 5m, 12m).
+Meningo ACWY: adolescents 11–14y.
 """
 from helpers import run_engine, get_recommended, get_contraindicated, get_up_to_date
 from helpers import today, birth_date_ago, dose, get_scheduled_for

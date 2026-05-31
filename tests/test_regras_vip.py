@@ -1,6 +1,6 @@
 """
-Testes CE+VL para RegrasVip — IN 2026 §4.
-Esquema: D1 (2m), D2 (4m), D3 (6m), Reforço (15m). CI >= 5a (esquema infantil).
+CE+VL tests for RegrasVip — IN 2026 §4.
+Schedule: D1 (2m), D2 (4m), D3 (6m), Booster (15m). Contraindicated >= 5y (pediatric schedule).
 """
 from helpers import run_engine, get_recommended, get_contraindicated, get_up_to_date
 from helpers import today, birth_date_ago, dose, get_scheduled_for

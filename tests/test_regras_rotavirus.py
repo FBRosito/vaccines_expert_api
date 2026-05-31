@@ -1,6 +1,6 @@
 """
-Testes CE+VL para RegrasRotavirus — IN 2026 §5.
-D1: ≤ 3m15d. D2: ≤ 7m29d. Intervalo mínimo D1→D2: 30 dias.
+CE+VL tests for RegrasRotavirus — IN 2026 §5.
+D1: ≤ 3m15d. D2: ≤ 7m29d. Minimum D1→D2 interval: 30 days.
 """
 from helpers import run_engine, get_recommended, get_contraindicated, get_up_to_date
 from helpers import today, birth_date_ago, dose, get_scheduled_for

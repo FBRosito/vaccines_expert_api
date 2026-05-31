@@ -1,16 +1,16 @@
 """
-Comparação: Motor Especialista vs Baseline Literal IN 2026.
+Comparison: Expert System vs Literal IN 2026 Baseline.
 
-Baseline ingênuo implementa apenas as cláusulas explícitas da IN 2026,
-omitindo as extensões documentadas via notas técnicas CTAI:
-  - Influenza 10a–59a11m29d (extensão adultos)
-  - COVID-19  20a–59a11m29d (extensão adultos)
+Naive baseline implements only the explicit clauses of IN 2026,
+omitting extensions documented via CTAI technical notes:
+  - Influenza 10y–59y11m29d (adult extension)
+  - COVID-19  20y–59y11m29d (adult extension)
 
-Mesma coorte sintética do test_cohort.py (N=5.000, seed=42, sem doses).
-Mesmo gabarito de referência (cohort_reference.py) com extensões CTAI.
+Same synthetic cohort as test_cohort.py (N=5,000, seed=42, no prior doses).
+Same reference standard (cohort_reference.py) with CTAI extensions.
 
-Demonstra quantitativamente que o SE supera a implementação estritamente
-normativa em Influenza e COVID-19 para a faixa etária adulta.
+Quantitatively demonstrates that the SE outperforms the strictly
+normative implementation for Influenza and COVID-19 in the adult age range.
 """
 import datetime
 import random
@@ -23,7 +23,7 @@ today = datetime.date.today()
 
 N_PACIENTES = 5000
 
-# Mesmos matchers do test_cohort.py
+# Same matchers as test_cohort.py
 VACINAS_AVALIADAS = [
     ('BCG',              lambda rec: 'BCG' in rec),
     ('Dengue',           lambda rec: 'Dengue' in rec),
@@ -36,8 +36,8 @@ VACINAS_AVALIADAS = [
 
 def baseline_in2026_literal(data_nascimento):
     """
-    Baseline ingênuo: somente IN 2026 §§1–19 sem notas CTAI.
-    Retorna set de nomes de vacinas recomendadas.
+    Naive baseline: IN 2026 §§1–19 only, no CTAI notes.
+    Returns a set of recommended vaccine names.
     """
     delta = relativedelta(today, data_nascimento)
     anos = delta.years
@@ -46,12 +46,12 @@ def baseline_in2026_literal(data_nascimento):
 
     if anos < 5:                   rec.add('BCG')
     if 10 <= anos < 15:            rec.add('Dengue')
-    if meses >= 6 and anos < 6:    rec.add('Influenza')   # crianças (IN literal)
-    if anos >= 60:                 rec.add('Influenza')   # idosos (IN literal)
-    # Sem: Influenza 10–59a (extensão CTAI — omitida propositalmente)
-    if meses >= 6 and anos < 5:    rec.add('COVID-19')    # crianças (IN literal)
-    if anos >= 60:                 rec.add('COVID-19')    # idosos (IN literal)
-    # Sem: COVID-19 20–59a (extensão CTAI — omitida propositalmente)
+    if meses >= 6 and anos < 6:    rec.add('Influenza')   # children (literal IN)
+    if anos >= 60:                 rec.add('Influenza')   # elderly (literal IN)
+    # Omitted: Influenza 10–59y (CTAI extension — intentionally excluded)
+    if meses >= 6 and anos < 5:    rec.add('COVID-19')    # children (literal IN)
+    if anos >= 60:                 rec.add('COVID-19')    # elderly (literal IN)
+    # Omitted: COVID-19 20–59y (CTAI extension — intentionally excluded)
     if anos >= 60:                 rec.add('Pneumocócica 23V')
     if meses >= 9 and anos < 60:   rec.add('Febre Amarela')
 

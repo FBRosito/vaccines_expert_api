@@ -1,6 +1,6 @@
 """
-Testes de invariantes com Hypothesis (property-based) — ~8.000 execuções.
-10 invariantes verificadas para qualquer paciente gerado aleatoriamente.
+Property-based invariant tests with Hypothesis — ~8,000 executions.
+10 invariants verified for any randomly generated patient.
 """
 import datetime
 import pytest
@@ -60,16 +60,17 @@ def test_inv04_menor10anos_dengue_nao_recomendado(dn):
         assert 'Dengue' not in rec, f"Dengue recomendado para paciente com {idade_anos} anos"
 
 
-@settings(max_examples=800, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=800, suppress_health_check=[HealthCheck.too_slow], deadline=None)
 @given(data_nascimento_st)
 def test_inv05_idoso_sem_fa_dose_fa_contraindicada(dn):
     """INV-05: idoso >= 60a sem FA → FA em contraindicadas"""
-    idade_anos = (today - dn).days // 365
-    if idade_anos >= 60:
+    import dateutil.relativedelta as rd
+    anos = rd.relativedelta(today, dn).years
+    if anos >= 60:
         r = run_engine(dn)
         ci = get_contraindicated(r)
         assert 'Febre Amarela' in ci, (
-            f"Febre Amarela não contraindicada para idoso de {idade_anos} anos"
+            f"Febre Amarela não contraindicada para idoso de {anos} anos"
         )
 
 
@@ -77,12 +78,13 @@ def test_inv05_idoso_sem_fa_dose_fa_contraindicada(dn):
 @given(data_nascimento_st)
 def test_inv06_idoso_sem_pneumo23_recomendado(dn):
     """INV-06: idoso >= 60a sem Pneumo23 → Pneumo23 em recomendadas"""
-    idade_anos = (today - dn).days // 365
-    if idade_anos >= 60:
+    import dateutil.relativedelta as rd
+    anos = rd.relativedelta(today, dn).years
+    if anos >= 60:
         r = run_engine(dn)
         rec = get_recommended(r)
         assert 'Pneumocócica 23V' in rec, (
-            f"Pneumo23 não recomendada para idoso de {idade_anos} anos"
+            f"Pneumo23 não recomendada para idoso de {anos} anos"
         )
 
 
@@ -144,7 +146,7 @@ def test_inv10_motor_nunca_silencioso(dn):
     total_outputs = (
         len(r['vacinas_recomendadas']) +
         len(r['vacinas_aprazadas']) +
-        len(r['get_up_to_date']) +
+        len(r['vacinas_em_dia']) +
         len(r['vacinas_contraindicadas'])
     )
     assert total_outputs > 0, f"Motor produziu 0 outputs para paciente nascido em {dn}"

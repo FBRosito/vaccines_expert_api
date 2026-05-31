@@ -1,7 +1,7 @@
 """
-Testes CE+VL para RegrasPneumo10 — IN 2026 §6.
-Esquema: D1 (2m), D2 (2m após D1), Reforço (12m). Catch-up dose única 1-4a.
-Contraindicada >= 5a.
+CE+VL tests for RegrasPneumo10 — IN 2026 §6.
+Schedule: D1 (2m), D2 (2m after D1), Booster (12m). Catch-up single dose 1-4y.
+Contraindicated >= 5y.
 """
 from helpers import run_engine, get_recommended, get_contraindicated, get_up_to_date
 from helpers import today, birth_date_ago, dose, get_scheduled_for

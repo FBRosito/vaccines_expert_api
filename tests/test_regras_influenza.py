@@ -1,8 +1,8 @@
 """
-Testes CE+VL para RegrasInfluenza — IN 2026 §8.
-Rotina: crianças 6m–5a11m29d + idosos ≥60a.
-Extensão (não literal IN): adolescentes/adultos 10–59a.
-Primovacinação: 2 doses com intervalo de 30 dias.
+CE+VL tests for RegrasInfluenza — IN 2026 §8.
+Routine: children 6m–5y11m29d + elderly ≥60y.
+Extension (beyond literal IN): adolescents/adults 10–59y.
+First-time vaccination: 2 doses with a 30-day interval.
 """
 import datetime
 from helpers import run_engine, get_recommended, get_scheduled, get_contraindicated, get_up_to_date

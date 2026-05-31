@@ -1,7 +1,7 @@
 """
-Testes CE+VL para RegrasHepatiteB — IN 2026 §2.
-Dose ao nascer (monovalente). Esquema adulto: 0-1-6 meses.
-A partir dos 2m: esquema via Penta (reconhecido por PENTA/DTP).
+CE+VL tests for RegrasHepatiteB — IN 2026 §2.
+Birth dose (monovalent). Adult schedule: 0-1-6 months.
+From 2m: schedule via Penta (recognized by PENTA/DTP).
 """
 from helpers import run_engine, get_recommended, get_contraindicated, get_up_to_date
 from helpers import today, birth_date_ago, dose, get_scheduled_for

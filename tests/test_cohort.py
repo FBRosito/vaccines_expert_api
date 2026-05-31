@@ -1,9 +1,9 @@
 """
-Simulação de coorte sintética — N=5.000 pacientes sem histórico vacinal.
-Pacientes com datas de nascimento uniformemente distribuídas em 0–80 anos.
-Compara saída do motor especialista com o gabarito IN 2026 + extensões documentadas.
-Métricas: Precisão, Recall, F1 e κ de Cohen por vacina rastreável.
-Critérios de aprovação: F1 >= 0.90 e κ >= 0.80 para todas as vacinas mapeadas.
+Synthetic cohort simulation — N=5,000 patients with no vaccination history.
+Patients with birth dates uniformly distributed over 0–80 years.
+Compares expert system output against the IN 2026 reference + documented extensions.
+Metrics: Precision, Recall, F1 and Cohen's κ per traceable vaccine.
+Pass criteria: F1 >= 0.90 and κ >= 0.80 for all mapped vaccines.
 """
 import datetime
 import random
@@ -42,7 +42,7 @@ def gerar_paciente():
 
 
 def computar_kappa(tp, fp, fn, tn):
-    """Kappa de Cohen — concordância além do acaso (Landis & Koch 1977)."""
+    """Cohen's Kappa — agreement beyond chance (Landis & Koch 1977)."""
     n = tp + fp + fn + tn
     if n == 0:
         return 1.0
@@ -74,7 +74,7 @@ def computar_metricas(resultados, vacina_ref, motor_matcher):
 
 
 def test_cohort_f1_por_vacina():
-    """F1 >= 0.90 e κ >= 0.80 para todas as vacinas rastreáveis à IN 2026 em N=5.000 pacientes."""
+    """F1 >= 0.90 and κ >= 0.80 for all vaccines traceable to IN 2026 across N=5,000 patients."""
     resultados = []
     for _ in range(N_PACIENTES):
         dn, doses = gerar_paciente()

@@ -1,6 +1,6 @@
 """
-Testes CE+VL para RegrasPentaDTP — IN 2026 §3.
-Penta: D1 (2m), D2 (4m), D3 (6m). DTP R1 (15m), R2 (4a). CI >= 7a.
+CE+VL tests for RegrasPentaDTP — IN 2026 §3.
+Penta: D1 (2m), D2 (4m), D3 (6m). DTP R1 (15m), R2 (4y). Contraindicated >= 7y.
 """
 from helpers import run_engine, get_recommended, get_contraindicated, get_up_to_date
 from helpers import today, birth_date_ago, dose, get_scheduled_for

@@ -1,7 +1,7 @@
 """
-Testes CE+VL para RegrasPneumo23 — IN 2026 §16.
-Público: ≥60 anos (implementado para todos; IN restringe a acamados/institucionalizados).
-Esquema: 2 doses, intervalo mínimo de 5 anos.
+CE+VL tests for RegrasPneumo23 — IN 2026 §16.
+Target: ≥60y (implemented for all; IN restricts to bedridden/institutionalized).
+Schedule: 2 doses, minimum 5-year interval.
 """
 from helpers import run_engine, get_recommended, get_scheduled, get_contraindicated, get_up_to_date
 from helpers import today, birth_date_ago, dose, get_scheduled_for

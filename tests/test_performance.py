@@ -1,7 +1,7 @@
 """
-Benchmark de desempenho do motor de inferência — N=200 pacientes.
-Mede latência por consulta (média, mediana, p95, p99) e throughput estimado.
-Executa o motor de forma isolada (sem HTTP, sem banco de dados).
+Inference engine performance benchmark — N=200 patients.
+Measures per-query latency (mean, median, p95, p99) and estimated throughput.
+Runs the engine in isolation (no HTTP, no database).
 """
 import random
 import statistics
@@ -14,7 +14,7 @@ N = 200
 
 
 def test_motor_latencia():
-    """Latência média < 500 ms/consulta; reporta distribuição completa."""
+    """Mean latency < 500 ms/query; reports full distribution."""
     tempos_ms = []
     for _ in range(N):
         anos = random.randint(0, 80)

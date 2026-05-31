@@ -1,7 +1,7 @@
 services:
-  # --- Serviço da API (Aplicação Flask) ---
+  # --- Flask API Service ---
   api:
-    build: 
+    build:
       context: .
       network: host
     ports:
@@ -14,7 +14,7 @@ services:
     depends_on:
       - vacinapi_dev_db
 
-  # --- Banco de Dados PostgreSQL ---
+  # --- PostgreSQL Database ---
   vacinapi_dev_db:
     image: postgres:14-alpine
     volumes:
@@ -26,7 +26,7 @@ services:
     ports:
       - "5433:5432"
 
-  # --- HTTPS Caddy ---
+  # --- HTTPS Reverse Proxy (Caddy) ---
   caddy:
     image: caddy:latest
     restart: unless-stopped

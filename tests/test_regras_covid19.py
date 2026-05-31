@@ -1,7 +1,7 @@
 """
-Testes CE+VL para RegrasCovid19 — IN 2026 §9.
-Rotina: crianças 6m–4a11m29d + idosos ≥60a.
-Extensão (não literal IN): adultos 20–59a (anual).
+CE+VL tests for RegrasCovid19 — IN 2026 §9.
+Routine: children 6m–4y11m29d + elderly ≥60y.
+Extension (beyond literal IN): adults 20–59y (annual).
 """
 from helpers import run_engine, get_recommended, get_scheduled, get_contraindicated, get_up_to_date
 from helpers import today, birth_date_ago, dose, get_scheduled_for

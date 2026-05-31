@@ -1,8 +1,8 @@
 """
-Testes CE+VL para RegrasVirusVivosAtenuados — IN 2026 §10, §11, §12.
-SCR: D1 (12m), D2 (15m). Varicela: D1 (15m), D2 (4a). FA: D1 (9m), Reforço (4a).
-Conflito SCR × FA em < 2 anos: salience=100 prioriza SCR.
-FA contraindicada em rotina para >= 60a.
+CE+VL tests for RegrasVirusVivosAtenuados — IN 2026 §10, §11, §12.
+SCR: D1 (12m), D2 (15m). Varicela: D1 (15m), D2 (4y). FA: D1 (9m), Booster (4y).
+SCR × FA conflict under 2 years: salience=100 prioritizes SCR.
+FA contraindicated in routine schedule for >= 60y.
 """
 from helpers import run_engine, get_recommended, get_contraindicated, get_up_to_date
 from helpers import today, birth_date_ago, dose, get_scheduled_for

@@ -1,7 +1,7 @@
 """
-Testes CE+VL para RegrasDengue — IN 2026 §19.
-Público: 10 a 14 anos, 11 meses e 29 dias.
-Esquema: 2 doses, intervalo mínimo de 90 dias.
+CE+VL tests for RegrasDengue — IN 2026 §19.
+Target: 10 to 14 years, 11 months and 29 days.
+Schedule: 2 doses, minimum interval of 90 days.
 """
 import pytest
 from helpers import run_engine, get_recommended, get_scheduled, get_contraindicated, get_up_to_date

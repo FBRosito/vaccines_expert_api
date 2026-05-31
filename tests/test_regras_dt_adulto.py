@@ -1,6 +1,6 @@
 """
-Testes CE+VL para RegrasDTAdulto — IN 2026 §17.
-Reforço a cada 10 anos a partir de 7 anos. Esquema inicial: 3 doses (0, 30d, 180d).
+CE+VL tests for RegrasDTAdulto — IN 2026 §17.
+Booster every 10 years from age 7. Initial schedule: 3 doses (0, 30d, 180d).
 """
 from helpers import run_engine, get_recommended, get_contraindicated, get_up_to_date
 from helpers import today, birth_date_ago, dose, get_scheduled_for

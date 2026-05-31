@@ -1,6 +1,6 @@
 """
-Testes CE+VL para RegrasHepatiteA — IN 2026 §15.
-Dose única aos 15 meses. Contraindicada após 4a11m29d.
+CE+VL tests for RegrasHepatiteA — IN 2026 §15.
+Single dose at 15 months. Contraindicated after 4y 11m 29d.
 """
 from helpers import run_engine, get_recommended, get_contraindicated, get_up_to_date
 from helpers import today, birth_date_ago, dose, get_scheduled_for

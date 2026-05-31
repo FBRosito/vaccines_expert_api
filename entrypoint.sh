@@ -2,20 +2,19 @@
 
 set -e
 
-# A variável de ambiente POSTGRES_HOST vem do nosso .env, que o docker-compose injeta.
+# POSTGRES_HOST is injected from .env via docker-compose.
 DB_HOST=$POSTGRES_HOST
 DB_PORT=$POSTGRES_PORT
 
-echo "Aguardando o banco de dados PostgreSQL iniciar em $DB_HOST:$DB_PORT..."
+echo "Waiting for PostgreSQL at $DB_HOST:$DB_PORT..."
 
-# O comando 'nc' (netcat) testa se a porta está aberta.
-# O loop continua enquanto a conexão falhar.
+# netcat probes whether the port is open; loop until the connection succeeds.
 while ! nc -z $DB_HOST $DB_PORT; do
   sleep 1
 done
 
-echo "Banco de dados pronto. Executando migrações..."
+echo "Database ready. Running migrations..."
 flask db upgrade
 
-echo "Migrações concluídas. Iniciando a aplicação..."
+echo "Migrations complete. Starting application..."
 exec "$@"
