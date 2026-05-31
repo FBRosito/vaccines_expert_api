@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 else:
     _RegrasBase = object
 
-from .fatos import Idade, DoseAplicada, RecomendacaoImediata, AgendamentoFuturo, Contraindicacao, EsquemaCompleto
+from .facts import Idade, DoseAplicada, RecomendacaoImediata, AgendamentoFuturo, Contraindicacao, EsquemaCompleto
 
 class RegrasHepatiteA(_RegrasBase):
     """

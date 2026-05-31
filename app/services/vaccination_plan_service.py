@@ -4,23 +4,23 @@ from experta import KnowledgeEngine, DefFacts
 from dateutil.relativedelta import relativedelta
 import uuid
 
-from app.expert_system.regras.fatos import *
+from app.expert_system.rules.facts import *
 
-from app.expert_system.regras.bcg import RegrasBCG
-from app.expert_system.regras.hepatite_b import RegrasHepatiteB
-from app.expert_system.regras.penta_dtp import RegrasPentaDTP
-from app.expert_system.regras.vip import RegrasVip
-from app.expert_system.regras.rotavirus import RegrasRotavirus
-from app.expert_system.regras.pneumo10 import RegrasPneumo10
-from app.expert_system.regras.pneumo23 import RegrasPneumo23
-from app.expert_system.regras.meningo import RegrasMeningo
-from app.expert_system.regras.covid19 import RegrasCovid19
-from app.expert_system.regras.hepatite_a import RegrasHepatiteA
-from app.expert_system.regras.virus_vivos_atenuados import RegrasVirusVivosAtenuados
-from app.expert_system.regras.dt_adulto import RegrasDTAdulto
-from app.expert_system.regras.hpv import RegrasHPV
-from app.expert_system.regras.influenza import RegrasInfluenza
-from app.expert_system.regras.dengue import RegrasDengue
+from app.expert_system.rules.bcg import RegrasBCG
+from app.expert_system.rules.hepatite_b import RegrasHepatiteB
+from app.expert_system.rules.penta_dtp import RegrasPentaDTP
+from app.expert_system.rules.vip import RegrasVip
+from app.expert_system.rules.rotavirus import RegrasRotavirus
+from app.expert_system.rules.pneumo10 import RegrasPneumo10
+from app.expert_system.rules.pneumo23 import RegrasPneumo23
+from app.expert_system.rules.meningo import RegrasMeningo
+from app.expert_system.rules.covid19 import RegrasCovid19
+from app.expert_system.rules.hepatite_a import RegrasHepatiteA
+from app.expert_system.rules.virus_vivos_atenuados import RegrasVirusVivosAtenuados
+from app.expert_system.rules.dt_adulto import RegrasDTAdulto
+from app.expert_system.rules.hpv import RegrasHPV
+from app.expert_system.rules.influenza import RegrasInfluenza
+from app.expert_system.rules.dengue import RegrasDengue
 
 from app.repositories import log_repository
 from app.repositories.models import PlanoVacinalLogModel
@@ -90,7 +90,7 @@ MAPA_DOSE_PADRAO_COMPLETA = {
     "COVID-19 (Moderna)": "2"
 }
 
-class PlanoVacinalService:
+class VaccinationPlanService:
     def _build_engine(self) -> Optional[KnowledgeEngine]:
         """Assemble all 15 rule modules into a single Experta KnowledgeEngine instance."""
         rule_modules = [

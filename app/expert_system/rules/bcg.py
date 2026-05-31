@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 else:
     _RegrasBase = object
 
-from .fatos import Idade, DoseAplicada, RecomendacaoImediata, Contraindicacao, EsquemaCompleto
+from .facts import Idade, DoseAplicada, RecomendacaoImediata, Contraindicacao, EsquemaCompleto
 
 class RegrasBCG(_RegrasBase):
     """Vaccination rules for BCG (IN 2026 §1). Single-dose, birth to 4y 11m 29d."""

@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 else:
     _RegrasBase = object
 
-from .fatos import Idade, DoseAplicada, RecomendacaoImediata, AgendamentoFuturo, EsquemaCompleto, ConflitoResolvido, Contraindicacao
+from .facts import Idade, DoseAplicada, RecomendacaoImediata, AgendamentoFuturo, EsquemaCompleto, ConflitoResolvido, Contraindicacao
 
 # --- HELPER FUNCTIONS ---
 def to_date(d):

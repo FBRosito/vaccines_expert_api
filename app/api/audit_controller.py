@@ -3,7 +3,7 @@ from flask import jsonify
 from . import api_bp
 from app import limiter
 
-from app.services.auditoria_service import AuditoriaService
+from app.services.audit_service import AuditService
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ def get_all_audit_records():
     """Return the 50 most recent audit log entries."""
     logger.info("GET /auditoria accessed.")
 
-    service = AuditoriaService()
+    service = AuditService()
     records = service.list_records()
 
     if not records:

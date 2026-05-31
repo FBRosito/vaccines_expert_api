@@ -34,7 +34,7 @@ The test suite lives in `tests/` and requires a `.venv` created at the project r
 PYTHONPATH=tests .venv/bin/pytest tests/ -q
 
 # CE+VL deterministic tests only (~5 s)
-PYTHONPATH=tests .venv/bin/pytest tests/test_regras_*.py -q
+PYTHONPATH=tests .venv/bin/pytest tests/test_rules_*.py -q
 
 # Property-based invariants (Hypothesis, 800 examples each, ~30 s)
 PYTHONPATH=tests .venv/bin/pytest tests/test_invariants.py -v
@@ -49,15 +49,15 @@ PYTHONPATH=tests .venv/bin/pytest tests/test_baseline_comparison.py -v -s
 PYTHONPATH=tests .venv/bin/pytest tests/test_performance.py -v -s
 
 # Code coverage for rule modules
-PYTHONPATH=tests .venv/bin/pytest tests/test_regras_*.py \
-  --cov=app/expert_system/regras --cov-report=term-missing -q
+PYTHONPATH=tests .venv/bin/pytest tests/test_rules_*.py \
+  --cov=app/expert_system/rules --cov-report=term-missing -q
 ```
 
 **Expected outcomes:**
 - CE+VL: 142 passed, 0 failed
 - Invariants: 0 counterexamples across 8,000 executions
 - Cohort: F1=1.000, κ=1.000 for BCG, Dengue, Influenza, COVID-19, Pneumocócica 23V, Febre Amarela
-- Coverage: ≥ 90% of 875 statements in `app/expert_system/regras/`
+- Coverage: ≥ 90% of 875 statements in `app/expert_system/rules/`
 
 To test the HTTP API manually:
 ```bash
@@ -84,7 +84,7 @@ Controller (app/api/)
 
 ## Expert System
 
-The core logic lives in `app/expert_system/regras/`. It uses **Experta** (Python forward-chaining rule engine, similar to CLIPS).
+The core logic lives in `app/expert_system/rules/`. It uses **Experta** (Python forward-chaining rule engine, similar to CLIPS).
 
 **15 vaccine rule modules** (`bcg.py`, `hepatite_b.py`, `penta_dtp.py`, `vip.py`, `rotavirus.py`, `pneumo10.py`, `pneumo23.py`, `meningo.py`, `covid19.py`, `hepatite_a.py`, `hpv.py`, `influenza.py`, `dt_adulto.py`, `dengue.py`, `virus_vivos_atenuados.py`) plus `fatos.py` (fact class definitions).
 
@@ -111,10 +111,10 @@ This enables cross-vaccine interaction rules (e.g., live-virus spacing).
 
 ## FHIR & Vaccine Codes
 
-The API speaks **HL7 FHIR** externally and a flat internal format internally. The translation happens in `app/api/plano_vacinal_controller.py`.
+The API speaks **HL7 FHIR** externally and a flat internal format internally. The translation happens in `app/api/vaccination_plan_controller.py`.
 
 - **External codes**: SIPNI/RNDS codes (e.g., `"15"` = BCG, `"42"` = Penta)
-- **Mapping tables**: `DE_PARA_SIPNI_INTERNO` (SIPNI → internal) in `plano_vacinal_controller.py`; `MAPA_NOME_PARA_SIPNI` (internal → SIPNI) in `plano_vacinal_service.py`
+- **Mapping tables**: `DE_PARA_SIPNI_INTERNO` (SIPNI → internal) in `vaccination_plan_controller.py`; `MAPA_NOME_PARA_SIPNI` (internal → SIPNI) in `vaccination_plan_service.py`
 
 Input: FHIR Bundle with `Patient` + `Immunization` resources.
 Output: FHIR `ImmunizationRecommendation` Bundle.

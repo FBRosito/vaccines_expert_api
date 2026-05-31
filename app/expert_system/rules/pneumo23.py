@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 else:
     _RegrasBase = object
 
-from .fatos import Idade, DoseAplicada, RecomendacaoImediata, AgendamentoFuturo, EsquemaCompleto
+from .facts import Idade, DoseAplicada, RecomendacaoImediata, AgendamentoFuturo, EsquemaCompleto
 
 def to_date(d):
     if isinstance(d, datetime.datetime):

@@ -1,7 +1,7 @@
 import datetime
 from dateutil.relativedelta import relativedelta
 from unittest.mock import patch
-from app.services.plano_vacinal_service import PlanoVacinalService
+from app.services.vaccination_plan_service import VaccinationPlanService
 
 
 def today():
@@ -23,8 +23,8 @@ def run_engine(date_of_birth, doses=None):
     if doses is None:
         doses = []
     patient = {'data_nascimento': date_of_birth, 'sexo': 'M'}
-    with patch('app.services.plano_vacinal_service.log_repository'):
-        svc = PlanoVacinalService()
+    with patch('app.services.vaccination_plan_service.log_repository'):
+        svc = VaccinationPlanService()
         svc._paciente_dados = patient
         svc._carteira_dados = doses
         engine = svc._build_engine()

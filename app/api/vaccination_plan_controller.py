@@ -7,8 +7,8 @@ from datetime import date, datetime
 
 logger = logging.getLogger(__name__)
 
-from app.schemas.plano_vacinal_schema import FHIRBundleSchema
-from app.services.plano_vacinal_service import PlanoVacinalService
+from app.schemas.vaccination_plan_schema import FHIRBundleSchema
+from app.services.vaccination_plan_service import VaccinationPlanService
 
 # --- SIPNI (RNDS) code → internal rule engine code translation map ---
 # Reference: http://www.saude.gov.br/fhir/r4/CodeSystem/BRImunobiologico
@@ -77,7 +77,7 @@ def _parse_data_iso(data_str):
 def _adaptar_fhir_para_interno(fhir_data):
     """
     Anti-Corruption Layer: convert an RNDS-compliant FHIR Bundle to the flat internal
-    dict format that PlanoVacinalService expects. Performs explicit date parsing (str → date).
+    dict format that VaccinationPlanService expects. Performs explicit date parsing (str → date).
     """
     paciente = None
     carteira = []
@@ -158,7 +158,7 @@ def get_vaccination_plan():
         return jsonify({"erros": f"Erro ao processar dados FHIR: {str(e)}"}), 400
 
     # 3. Run the inference engine
-    servico = PlanoVacinalService()
+    servico = VaccinationPlanService()
     plano = servico.generate_plan_and_audit(dados_internos)
 
     if not plano:

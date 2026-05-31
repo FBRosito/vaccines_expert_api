@@ -27,12 +27,12 @@ This project proposes a **Knowledge-Based Expert System** accessible via a RESTf
 ```text
 vaccines_expert_api
 ├── app/
-│   ├── api/                   # REST Controllers (Plano Vacinal, Auditoria)
+│   ├── api/                   # REST Controllers (Vaccination Plan, Audit)
 │   ├── expert_system/         # Inference Engine & Knowledge Base
-│   │   └── regras/            # 15 rule modules (BCG, HPV, Covid19, Hepatite, Dengue, etc.)
+│   │   └── rules/             # 15 rule modules (BCG, HPV, Covid19, Hepatite, Dengue, etc.)
 │   ├── repositories/          # Database interaction (Models, Logs)
-│   ├── schemas/               # Data validation schemas (e.g., plano_vacinal_schema)
-│   ├── services/              # Business logic (Auditoria, Plano Vacinal)
+│   ├── schemas/               # Data validation schemas (e.g., vaccination_plan_schema)
+│   ├── services/              # Business logic (Audit, Vaccination Plan)
 │   ├── static/ & templates/   # Frontend assets and interface (HTML, CSS, JS)
 │   └── utils/                 # Helper functions
 ├── migrations/                # Alembic database migrations
@@ -63,7 +63,7 @@ vaccines_expert_api
 
 * **Persistence Layer:** A PostgreSQL database is implemented to record transaction logs. This allows for the future auditing of the generated recommendations.
 
-* **Normative Traceability:** The `rastreabilidade/` directory contains a traceability matrix that maps 28 IN 2026 clauses to implemented rules and test cases (25 fully covered, 3 documented extensions beyond the normative text).
+* **Normative Traceability:** The `traceability/` directory contains a traceability matrix that maps 28 IN 2026 clauses to implemented rules and test cases (25 fully covered, 3 documented extensions beyond the normative text).
 
 ### 4. Validation & Testing
 
