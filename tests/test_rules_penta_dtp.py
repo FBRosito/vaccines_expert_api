@@ -1,5 +1,5 @@
 """
-CE+VL tests for RegrasPentaDTP — IN 2026 §3.
+CE+VL tests for RulesPentaDTP — IN 2026 §3.
 Penta: D1 (2m), D2 (4m), D3 (6m). DTP R1 (15m), R2 (4y). Contraindicated >= 7y.
 """
 from helpers import run_engine, get_recommended, get_contraindicated, get_up_to_date
@@ -15,8 +15,8 @@ def test_penta01_menor2m_agendar_d1():
 
 def test_penta02_2m_recomendar_d1():
     r = run_engine(birth_date_ago(months=2))
-    assert any(v['vacina'] == 'Penta' and v['dose'] == 1
-               for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'Penta' and v['dose'] == 1
+               for v in r['recommended_vaccines'])
 
 
 def test_penta03_d1_ha_30d_agendar_d2():
@@ -52,8 +52,8 @@ def test_penta05_d1_d2_d3_recomendar_dtp_r1():
         dose('PENTA', data_d3, dose_num=3),
     ]
     r = run_engine(dn, doses)
-    assert any(v['vacina'] == 'DTP (Tríplice Bacteriana)'
-               for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'DTP (Tríplice Bacteriana)'
+               for v in r['recommended_vaccines'])
 
 
 def test_penta06_dtp_r1_aplicado_agendar_r2():
@@ -86,8 +86,8 @@ def test_penta07_dtp_r2_recomendar_4anos():
         dose('DTP', data_r1, dose_num=1),
     ]
     r = run_engine(dn, doses)
-    assert any(v['vacina'] == 'DTP (Tríplice Bacteriana)'
-               for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'DTP (Tríplice Bacteriana)'
+               for v in r['recommended_vaccines'])
 
 
 def test_penta08_dtp_r1_r2_esquema_completo():
@@ -122,7 +122,7 @@ def test_penta10_adulto_sem_penta_contraindica():
 def test_penta11_2m_recomendar_d1_imediata():
     # VL: exatamente 2 meses → deve recomendar D1
     r = run_engine(birth_date_ago(months=2))
-    assert any(v['vacina'] == 'Penta' for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'Penta' for v in r['recommended_vaccines'])
 
 
 def test_penta12_penta_completa_dtp_r1_r2_recomendar():
@@ -141,7 +141,7 @@ def test_penta12_penta_completa_dtp_r1_r2_recomendar():
     r = run_engine(dn, doses)
     # DTP R2 should be recommended or scheduled
     dtp_output = (
-        any(v['vacina'] == 'DTP (Tríplice Bacteriana)' for v in r['vacinas_recomendadas']) or
-        any(v['vacina'] == 'DTP (Tríplice Bacteriana)' for v in r['vacinas_aprazadas'])
+        any(v['vaccine'] == 'DTP (Tríplice Bacteriana)' for v in r['recommended_vaccines']) or
+        any(v['vaccine'] == 'DTP (Tríplice Bacteriana)' for v in r['scheduled_vaccines'])
     )
     assert dtp_output

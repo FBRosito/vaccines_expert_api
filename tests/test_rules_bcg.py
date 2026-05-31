@@ -1,4 +1,4 @@
-"""CE+VL tests for RegrasBCG — IN 2026 §1. Target: 0 to 4y 11m 29d."""
+"""CE+VL tests for RulesBCG — IN 2026 §1. Target: 0 to 4y 11m 29d."""
 from helpers import run_engine, get_recommended, get_contraindicated, get_up_to_date
 from helpers import today, birth_date_ago, dose
 

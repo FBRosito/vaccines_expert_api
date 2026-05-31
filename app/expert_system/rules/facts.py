@@ -3,54 +3,54 @@ from schema import Or
 from experta import Fact, Field
 
 
-class Paciente(Fact):
+class Patient(Fact):
     """Input fact representing the patient."""
-    data_nascimento = Field(datetime.date, mandatory=True)
+    birth_date = Field(datetime.date, mandatory=True)
 
-class Idade(Fact):
+class Age(Fact):
     """
     Input fact with the patient's computed age.
-    Includes data_nascimento so future-scheduling rules can anchor dates to birth date.
-    Note: `meses` stores total months (years * 12 + remaining months), not remainder alone.
+    Includes birth_date so future-scheduling rules can anchor dates to birth date.
+    Note: `months` stores total months (years * 12 + remaining months), not remainder alone.
     """
-    anos = Field(int, mandatory=True)
-    meses = Field(int, mandatory=True)
-    dias = Field(int, mandatory=True)
-    data_nascimento = Field(datetime.date, mandatory=True)
+    years = Field(int, mandatory=True)
+    months = Field(int, mandatory=True)
+    days = Field(int, mandatory=True)
+    birth_date = Field(datetime.date, mandatory=True)
 
-class DoseAplicada(Fact):
+class AppliedDose(Fact):
     """Input fact representing a previously administered vaccine dose."""
-    vacina_codigo = Field(str, mandatory=True)
-    data_aplicacao = Field(datetime.date, mandatory=True)
+    vaccine_code = Field(str, mandatory=True)
+    date_applied = Field(datetime.date, mandatory=True)
     dose = Field(Or(str, int), mandatory=True)
 
-class RecomendacaoImediata(Fact):
+class ImmediateRecommendation(Fact):
     """Output fact: the patient should receive this vaccine today."""
-    vacina = Field(str, mandatory=True)
+    vaccine = Field(str, mandatory=True)
     dose = Field(Or(str, int), mandatory=True)
-    explicacao = Field(str, mandatory=True)
+    explanation = Field(str, mandatory=True)
 
-class AgendamentoFuturo(Fact):
+class FutureSchedule(Fact):
     """Output fact: the patient should schedule this vaccine for a future date."""
-    vacina = Field(str, mandatory=True)
+    vaccine = Field(str, mandatory=True)
     dose = Field(Or(str, int), mandatory=True)
-    data_minima = Field(datetime.date, mandatory=True)
-    data_recomendada = Field(datetime.date, mandatory=True)
-    explicacao = Field(str, mandatory=True)
+    min_date = Field(datetime.date, mandatory=True)
+    recommended_date = Field(datetime.date, mandatory=True)
+    explanation = Field(str, mandatory=True)
 
-class Contraindicacao(Fact):
+class Contraindication(Fact):
     """Output fact: this vaccine is contraindicated for the patient."""
-    vacina = Field(str, mandatory=True)
+    vaccine = Field(str, mandatory=True)
     dose = Field(Or(str, int), mandatory=False)
-    motivo = Field(str, mandatory=True)
-    explicacao = Field(str, mandatory=True)
+    reason = Field(str, mandatory=True)
+    explanation = Field(str, mandatory=True)
 
-class EsquemaCompleto(Fact):
+class CompletedSchedule(Fact):
     """Output fact: the vaccination schedule for this vaccine is complete/up to date."""
-    vacina = Field(str, mandatory=True)
-    explicacao = Field(str, mandatory=True)
-    data_ultima_dose = Field(datetime.date, mandatory=False)
+    vaccine = Field(str, mandatory=True)
+    explanation = Field(str, mandatory=True)
+    last_dose_date = Field(datetime.date, mandatory=False)
 
-class ConflitoResolvido(Fact):
+class ResolvedConflict(Fact):
     """Internal fact used to track resolved live-virus conflicts (e.g. SCR vs Febre Amarela)."""
-    vacinas = Field([str], mandatory=True)
+    vaccines = Field([str], mandatory=True)

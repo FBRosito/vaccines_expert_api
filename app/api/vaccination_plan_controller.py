@@ -98,12 +98,12 @@ def _adaptar_fhir_para_interno(fhir_data):
             data_nasc_obj = _parse_data_iso(resource.get('birthDate'))
 
             paciente = {
-                'data_nascimento': data_nasc_obj,
-                'sexo': sexo_map.get(resource.get('gender'), 'Outro')
+                'birth_date': data_nasc_obj,
+                'sex': sexo_map.get(resource.get('gender'), 'Outro')
             }
         
         elif r_type == 'Immunization':
-            # Map FHIR Immunization → internal DoseAplicada dict
+            # Map FHIR Immunization → internal AppliedDose dict
             
             codings = resource.get('vaccineCode', {}).get('coding', [])
             codigo_sipni = codings[0].get('code') if codings else None
@@ -120,8 +120,8 @@ def _adaptar_fhir_para_interno(fhir_data):
 
             if codigo_interno and dose_valor and data_aplicacao_obj:
                 carteira.append({
-                    'vacina_codigo': codigo_interno,
-                    'data_aplicacao': data_aplicacao_obj,
+                    'vaccine_code': codigo_interno,
+                    'date_applied': data_aplicacao_obj,
                     'dose': dose_valor
                 })
 
@@ -151,7 +151,7 @@ def get_vaccination_plan():
         if not dados_internos['paciente']:
             return jsonify({"erros": "O Bundle deve conter pelo menos um recurso 'Patient'."}), 400
         
-        if not dados_internos['paciente']['data_nascimento']:
+        if not dados_internos['paciente']['birth_date']:
              return jsonify({"erros": "Data de nascimento inválida ou ausente no recurso Patient."}), 400
             
     except Exception as e:

@@ -1,5 +1,5 @@
 """
-CE+VL tests for RegrasPneumo10 — IN 2026 §6.
+CE+VL tests for RulesPneumo10 — IN 2026 §6.
 Schedule: D1 (2m), D2 (2m after D1), Booster (12m). Catch-up single dose 1-4y.
 Contraindicated >= 5y.
 """
@@ -16,8 +16,8 @@ def test_p10_01_menor2m_agendar_d1():
 
 def test_p10_02_2m_recomendar_d1():
     r = run_engine(birth_date_ago(months=2))
-    assert any(v['vacina'] == 'Pneumocócica 10V' and v['dose'] == 1
-               for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'Pneumocócica 10V' and v['dose'] == 1
+               for v in r['recommended_vaccines'])
 
 
 def test_p10_03_d1_ha_15d_agendar_d2():
@@ -32,8 +32,8 @@ def test_p10_04_d1_ha_2m_recomendar_d2():
     data_d1 = today() - relativedelta(months=2)
     doses = [dose('PNEUMO10', data_d1, dose_num=1)]
     r = run_engine(birth_date_ago(months=4), doses)
-    assert any(v['vacina'] == 'Pneumocócica 10V' and v['dose'] == 2
-               for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'Pneumocócica 10V' and v['dose'] == 2
+               for v in r['recommended_vaccines'])
 
 
 def test_p10_05_d1_d2_agendar_reforco():
@@ -63,14 +63,14 @@ def test_p10_06_d1_d2_reforco_aplicado_em_dia():
 
 def test_p10_07_catchup_1a_sem_doses_dose_unica():
     r = run_engine(birth_date_ago(years=1))
-    assert any(v['vacina'] == 'Pneumocócica 10V' and v['dose'] == 'Única'
-               for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'Pneumocócica 10V' and v['dose'] == 'Única'
+               for v in r['recommended_vaccines'])
 
 
 def test_p10_08_catchup_4a_sem_doses_dose_unica():
     r = run_engine(birth_date_ago(years=4))
-    assert any(v['vacina'] == 'Pneumocócica 10V' and v['dose'] == 'Única'
-               for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'Pneumocócica 10V' and v['dose'] == 'Única'
+               for v in r['recommended_vaccines'])
 
 
 def test_p10_09_5anos_sem_doses_contraindica():

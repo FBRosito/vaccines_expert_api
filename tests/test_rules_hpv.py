@@ -1,5 +1,5 @@
 """
-CE+VL tests for RegrasHPV — IN 2026 §18.
+CE+VL tests for RulesHPV — IN 2026 §18.
 9–14y: 2 doses. 15–19y: 3 doses. Contraindicated >19y (routine).
 """
 from helpers import run_engine, get_recommended, get_contraindicated, get_up_to_date

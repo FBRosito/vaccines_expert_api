@@ -1,5 +1,5 @@
 """
-CE+VL tests for RegrasVip — IN 2026 §4.
+CE+VL tests for RulesVip — IN 2026 §4.
 Schedule: D1 (2m), D2 (4m), D3 (6m), Booster (15m). Contraindicated >= 5y (pediatric schedule).
 """
 from helpers import run_engine, get_recommended, get_contraindicated, get_up_to_date
@@ -15,8 +15,8 @@ def test_vip01_menor2m_agendar_d1():
 
 def test_vip02_2m_recomendar_d1():
     r = run_engine(birth_date_ago(months=2))
-    assert any(v['vacina'] == 'VIP (Poliomielite)' and v['dose'] == 1
-               for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'VIP (Poliomielite)' and v['dose'] == 1
+               for v in r['recommended_vaccines'])
 
 
 def test_vip03_d1_ha_15d_agendar_d2():
@@ -78,16 +78,16 @@ def test_vip07_5anos_sem_reforco_contraindica():
 
 def test_vip08_crianca_4a_sem_d1_recomendar():
     r = run_engine(birth_date_ago(years=4))
-    assert any(v['vacina'] == 'VIP (Poliomielite)'
-               for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'VIP (Poliomielite)'
+               for v in r['recommended_vaccines'])
 
 
 def test_vip09_d1_ha_2m_recomendar_d2():
     data_d1 = today() - relativedelta(months=2)
     doses = [dose('VIP', data_d1, dose_num=1)]
     r = run_engine(birth_date_ago(months=4), doses)
-    assert any(v['vacina'] == 'VIP (Poliomielite)' and v['dose'] == 2
-               for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'VIP (Poliomielite)' and v['dose'] == 2
+               for v in r['recommended_vaccines'])
 
 
 def test_vip10_d1_d2_d3_reforco_recomendar_agora():
@@ -102,5 +102,5 @@ def test_vip10_d1_d2_d3_reforco_recomendar_agora():
         dose('VIP', data_d3, dose_num=3),
     ]
     r = run_engine(dn, doses)
-    assert any(v['vacina'] == 'VIP (Poliomielite)'
-               for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'VIP (Poliomielite)'
+               for v in r['recommended_vaccines'])

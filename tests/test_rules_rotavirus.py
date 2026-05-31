@@ -1,5 +1,5 @@
 """
-CE+VL tests for RegrasRotavirus — IN 2026 §5.
+CE+VL tests for RulesRotavirus — IN 2026 §5.
 D1: ≤ 3m15d. D2: ≤ 7m29d. Minimum D1→D2 interval: 30 days.
 """
 from helpers import run_engine, get_recommended, get_contraindicated, get_up_to_date
@@ -9,22 +9,22 @@ from dateutil.relativedelta import relativedelta
 
 def test_rota01_2m_recomendar_d1():
     r = run_engine(birth_date_ago(months=2))
-    assert any(v['vacina'] == 'Rotavírus (VORH)' for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'Rotavírus (VORH)' for v in r['recommended_vaccines'])
 
 
 def test_rota02_3m14d_recomendar_d1_limite():
     # 105 dias = último dia permitido para D1 (regra: d <= 105)
     dn = birth_date_ago(days=105)
     r = run_engine(dn)
-    assert any(v['vacina'] == 'Rotavírus (VORH)' for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'Rotavírus (VORH)' for v in r['recommended_vaccines'])
 
 
 def test_rota03_3m15d_contraindica_d1():
     # 106 dias = após o limite para D1 (regra: d > 105 → contraindica)
     dn = birth_date_ago(days=106)
     r = run_engine(dn)
-    assert any(v['vacina'] == 'Rotavírus (VORH)' for v in r['vacinas_contraindicadas'])
-    assert not any(v['vacina'] == 'Rotavírus (VORH)' for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'Rotavírus (VORH)' for v in r['contraindicated_vaccines'])
+    assert not any(v['vaccine'] == 'Rotavírus (VORH)' for v in r['recommended_vaccines'])
 
 
 def test_rota04_d1_ha_15d_agendar_d2():
@@ -41,8 +41,8 @@ def test_rota05_7m28d_com_d1_recomendar_d2():
     data_d1 = dn + relativedelta(months=2)
     doses = [dose('VORH', data_d1, dose_num=1)]
     r = run_engine(dn, doses)
-    assert any(v['vacina'] == 'Rotavírus (VORH)' and v['dose'] == 2
-               for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'Rotavírus (VORH)' and v['dose'] == 2
+               for v in r['recommended_vaccines'])
 
 
 def test_rota06_7m29d_com_d1_contraindica_d2():
@@ -51,4 +51,4 @@ def test_rota06_7m29d_com_d1_contraindica_d2():
     data_d1 = dn + relativedelta(months=2)
     doses = [dose('VORH', data_d1, dose_num=1)]
     r = run_engine(dn, doses)
-    assert any(v['vacina'] == 'Rotavírus (VORH)' for v in r['vacinas_contraindicadas'])
+    assert any(v['vaccine'] == 'Rotavírus (VORH)' for v in r['contraindicated_vaccines'])

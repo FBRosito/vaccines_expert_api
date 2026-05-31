@@ -6,21 +6,21 @@ import uuid
 
 from app.expert_system.rules.facts import *
 
-from app.expert_system.rules.bcg import RegrasBCG
-from app.expert_system.rules.hepatite_b import RegrasHepatiteB
-from app.expert_system.rules.penta_dtp import RegrasPentaDTP
-from app.expert_system.rules.vip import RegrasVip
-from app.expert_system.rules.rotavirus import RegrasRotavirus
-from app.expert_system.rules.pneumo10 import RegrasPneumo10
-from app.expert_system.rules.pneumo23 import RegrasPneumo23
-from app.expert_system.rules.meningo import RegrasMeningo
-from app.expert_system.rules.covid19 import RegrasCovid19
-from app.expert_system.rules.hepatite_a import RegrasHepatiteA
-from app.expert_system.rules.virus_vivos_atenuados import RegrasVirusVivosAtenuados
-from app.expert_system.rules.dt_adulto import RegrasDTAdulto
-from app.expert_system.rules.hpv import RegrasHPV
-from app.expert_system.rules.influenza import RegrasInfluenza
-from app.expert_system.rules.dengue import RegrasDengue
+from app.expert_system.rules.bcg import RulesBCG
+from app.expert_system.rules.hepatitis_b import RulesHepatitisB
+from app.expert_system.rules.penta_dtp import RulesPentaDTP
+from app.expert_system.rules.vip import RulesVip
+from app.expert_system.rules.rotavirus import RulesRotavirus
+from app.expert_system.rules.pneumo10 import RulesPneumo10
+from app.expert_system.rules.pneumo23 import RulesPneumo23
+from app.expert_system.rules.meningo import RulesMeningo
+from app.expert_system.rules.covid19 import RulesCovid19
+from app.expert_system.rules.hepatitis_a import RulesHepatitisA
+from app.expert_system.rules.live_attenuated_viruses import RulesLiveAttenuatedViruses
+from app.expert_system.rules.dt_adult import RulesDTAdult
+from app.expert_system.rules.hpv import RulesHPV
+from app.expert_system.rules.influenza import RulesInfluenza
+from app.expert_system.rules.dengue import RulesDengue
 
 from app.repositories import log_repository
 from app.repositories.models import PlanoVacinalLogModel
@@ -94,10 +94,10 @@ class VaccinationPlanService:
     def _build_engine(self) -> Optional[KnowledgeEngine]:
         """Assemble all 15 rule modules into a single Experta KnowledgeEngine instance."""
         rule_modules = [
-            RegrasBCG, RegrasHepatiteB, RegrasPentaDTP, RegrasVip, RegrasRotavirus,
-            RegrasPneumo10, RegrasPneumo23, RegrasMeningo, RegrasCovid19, RegrasHepatiteA,
-            RegrasVirusVivosAtenuados, RegrasDTAdulto, RegrasHPV, RegrasInfluenza,
-            RegrasDengue
+            RulesBCG, RulesHepatitisB, RulesPentaDTP, RulesVip, RulesRotavirus,
+            RulesPneumo10, RulesPneumo23, RulesMeningo, RulesCovid19, RulesHepatitisA,
+            RulesLiveAttenuatedViruses, RulesDTAdult, RulesHPV, RulesInfluenza,
+            RulesDengue
         ]
 
         if not rule_modules:
@@ -107,25 +107,25 @@ class VaccinationPlanService:
 
         @DefFacts()
         def _initial_facts(self):
-            dn = self.paciente_dados['data_nascimento']
+            dn = self.paciente_dados['birth_date']
             hoje = datetime.date.today()
-            yield Paciente(data_nascimento=dn)
+            yield Patient(birth_date=dn)
 
             delta = relativedelta(hoje, dn)
             idade_meses_completos = delta.years * 12 + delta.months
             idade_dias_totais = (hoje - dn).days
 
-            yield Idade(
-                dias=idade_dias_totais,
-                meses=idade_meses_completos,
-                anos=delta.years,
-                data_nascimento=dn
+            yield Age(
+                days=idade_dias_totais,
+                months=idade_meses_completos,
+                years=delta.years,
+                birth_date=dn
             )
 
             for vacina in self.carteira_dados:
-                yield DoseAplicada(
-                    vacina_codigo=vacina['vacina_codigo'],
-                    data_aplicacao=vacina['data_aplicacao'],
+                yield AppliedDose(
+                    vaccine_code=vacina['vaccine_code'],
+                    date_applied=vacina['date_applied'],
                     dose=vacina.get('dose')
                 )
 
@@ -140,22 +140,22 @@ class VaccinationPlanService:
         em_dia = []
 
         for fact in engine.facts.values():
-            if isinstance(fact, RecomendacaoImediata):
+            if isinstance(fact, ImmediateRecommendation):
                 recomendadas.append(dict(fact))
-            elif isinstance(fact, AgendamentoFuturo):
+            elif isinstance(fact, FutureSchedule):
                 aprazadas.append(dict(fact))
-            elif isinstance(fact, Contraindicacao):
+            elif isinstance(fact, Contraindication):
                 contraindicadas.append(dict(fact))
-            elif isinstance(fact, EsquemaCompleto):
+            elif isinstance(fact, CompletedSchedule):
                 em_dia.append(dict(fact))
         
-        aprazadas.sort(key=lambda x: x.get('data_recomendada', ''))
+        aprazadas.sort(key=lambda x: x.get('recommended_date', ''))
 
         return {
-            "vacinas_recomendadas": recomendadas,
-            "vacinas_aprazadas": aprazadas,
-            "vacinas_contraindicadas": contraindicadas,
-            "vacinas_em_dia": em_dia
+            "recommended_vaccines": recomendadas,
+            "scheduled_vaccines": aprazadas,
+            "contraindicated_vaccines": contraindicadas,
+            "up_to_date_vaccines": em_dia
         }
 
     def _to_fhir_bundle(self, plano_interno: dict) -> dict:
@@ -170,7 +170,7 @@ class VaccinationPlanService:
         }
 
         def build_recommendation_resource(item, status_fhir, data_criterio=None):
-            nome_vacina = item.get('vacina', 'Desconhecida')
+            nome_vacina = item.get('vaccine', 'Desconhecida')
             codigo_sipni = MAPA_NOME_PARA_SIPNI.get(nome_vacina, "99")
 
             dose_str = str(item.get('dose', 'Unknown'))
@@ -196,7 +196,7 @@ class VaccinationPlanService:
                         }]
                     },
                     "doseNumberString": dose_str,
-                    "description": item.get('explicacao') or item.get('motivo')
+                    "description": item.get('explanation') or item.get('reason')
                 }]
             }
 
@@ -206,7 +206,7 @@ class VaccinationPlanService:
             return {"resource": resource}
 
         # 1. Immediate recommendations
-        for item in plano_interno["vacinas_recomendadas"]:
+        for item in plano_interno["recommended_vaccines"]:
             data_criterio = [{
                 "code": {"coding": [{"system": "http://loinc.org", "code": "30980-7", "display": "Date forecast"}]},
                 "value": datetime.date.today().isoformat()
@@ -214,9 +214,9 @@ class VaccinationPlanService:
             fhir_bundle["entry"].append(build_recommendation_resource(item, "due", data_criterio))
 
         # 2. Scheduled (future doses)
-        for item in plano_interno["vacinas_aprazadas"]:
-            data_min = item.get('data_minima')
-            data_rec = item.get('data_recomendada')
+        for item in plano_interno["scheduled_vaccines"]:
+            data_min = item.get('min_date')
+            data_rec = item.get('recommended_date')
             
             criterios = []
             if data_rec:
@@ -233,11 +233,11 @@ class VaccinationPlanService:
             fhir_bundle["entry"].append(build_recommendation_resource(item, "due", criterios))
 
         # 3. Contraindicated
-        for item in plano_interno["vacinas_contraindicadas"]:
+        for item in plano_interno["contraindicated_vaccines"]:
             fhir_bundle["entry"].append(build_recommendation_resource(item, "contraindicated"))
 
         # 4. Up to date
-        for item in plano_interno["vacinas_em_dia"]:
+        for item in plano_interno["up_to_date_vaccines"]:
             fhir_bundle["entry"].append(build_recommendation_resource(item, "complete"))
 
         return fhir_bundle
@@ -274,13 +274,13 @@ class VaccinationPlanService:
             output_str = convert_dates_to_str(plano_fhir)
 
             log_params = {
-                'paciente_sexo': paciente_info['sexo'],
+                'paciente_sexo': paciente_info['sex'],
                 'numero_doses_recebidas': len(carteira_info),
                 'request_input': input_str,
                 'response_output': output_str
             }
-            if paciente_info.get('data_nascimento'):
-                log_params['paciente_data_nascimento'] = paciente_info['data_nascimento']
+            if paciente_info.get('birth_date'):
+                log_params['paciente_data_nascimento'] = paciente_info['birth_date']
 
             novo_log = PlanoVacinalLogModel(**log_params)
             log_repository.save_log(novo_log)

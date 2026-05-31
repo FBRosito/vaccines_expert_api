@@ -86,7 +86,7 @@ Controller (app/api/)
 
 The core logic lives in `app/expert_system/rules/`. It uses **Experta** (Python forward-chaining rule engine, similar to CLIPS).
 
-**15 vaccine rule modules** (`bcg.py`, `hepatite_b.py`, `penta_dtp.py`, `vip.py`, `rotavirus.py`, `pneumo10.py`, `pneumo23.py`, `meningo.py`, `covid19.py`, `hepatite_a.py`, `hpv.py`, `influenza.py`, `dt_adulto.py`, `dengue.py`, `virus_vivos_atenuados.py`) plus `fatos.py` (fact class definitions).
+**15 vaccine rule modules** (`bcg.py`, `hepatitis_b.py`, `penta_dtp.py`, `vip.py`, `rotavirus.py`, `pneumo10.py`, `pneumo23.py`, `meningo.py`, `covid19.py`, `hepatitis_a.py`, `hpv.py`, `influenza.py`, `dt_adult.py`, `dengue.py`, `live_attenuated_viruses.py`) plus `fatos.py` (fact class definitions).
 
 **Dynamic engine assembly** — all 15 modules are merged into a single `KnowledgeEngine` at runtime:
 ```python
@@ -107,7 +107,7 @@ This enables cross-vaccine interaction rules (e.g., live-virus spacing).
 | `EsquemaCompleto` | output | vaccination scheme finished |
 | `ConflitoResolvido` | internal | tracks resolved live-virus conflicts |
 
-**Conflict resolution**: `virus_vivos_atenuados.py` uses `salience=100` to prioritize MMR (SCR) over Yellow Fever when both are needed in children < 2 years, spacing them 30 days apart.
+**Conflict resolution**: `live_attenuated_viruses.py` uses `salience=100` to prioritize MMR (SCR) over Yellow Fever when both are needed in children < 2 years, spacing them 30 days apart.
 
 ## FHIR & Vaccine Codes
 

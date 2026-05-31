@@ -41,11 +41,11 @@ def test_inv02_recomendadas_disjunto_contraindicadas(dn):
 def test_inv03_aprazamentos_nao_retroativos(dn):
     """INV-03: toda data_minima em aprazadas >= hoje"""
     r = run_engine(dn)
-    for apr in r['vacinas_aprazadas']:
-        data_min = apr.get('data_minima')
+    for apr in r['scheduled_vaccines']:
+        data_min = apr.get('min_date')
         if data_min is not None:
             assert data_min >= today, (
-                f"Aprazamento retroativo para {apr['vacina']}: data_minima={data_min}"
+                f"Aprazamento retroativo para {apr['vaccine']}: data_minima={data_min}"
             )
 
 
@@ -144,9 +144,9 @@ def test_inv10_motor_nunca_silencioso(dn):
     """INV-10: qualquer paciente → ao menos 1 output em qualquer categoria"""
     r = run_engine(dn)
     total_outputs = (
-        len(r['vacinas_recomendadas']) +
-        len(r['vacinas_aprazadas']) +
-        len(r['vacinas_em_dia']) +
-        len(r['vacinas_contraindicadas'])
+        len(r['recommended_vaccines']) +
+        len(r['scheduled_vaccines']) +
+        len(r['up_to_date_vaccines']) +
+        len(r['contraindicated_vaccines'])
     )
     assert total_outputs > 0, f"Motor produziu 0 outputs para paciente nascido em {dn}"

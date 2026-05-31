@@ -15,14 +15,14 @@ def birth_date_ago(years=0, months=0, days=0):
 
 def dose(vaccine_code, date, dose_num=1):
     """Build a dose-history entry dict for test input."""
-    return {'vacina_codigo': vaccine_code, 'data_aplicacao': date, 'dose': dose_num}
+    return {'vaccine_code': vaccine_code, 'date_applied': date, 'dose': dose_num}
 
 
 def run_engine(date_of_birth, doses=None):
     """Run the inference engine in isolation (no HTTP, no database)."""
     if doses is None:
         doses = []
-    patient = {'data_nascimento': date_of_birth, 'sexo': 'M'}
+    patient = {'birth_date': date_of_birth, 'sex': 'M'}
     with patch('app.services.vaccination_plan_service.log_repository'):
         svc = VaccinationPlanService()
         svc._paciente_dados = patient
@@ -37,24 +37,24 @@ def run_engine(date_of_birth, doses=None):
 
 def get_recommended(result):
     """Extract the set of recommended vaccine names from an engine result."""
-    return {v['vacina'] for v in result['vacinas_recomendadas']}
+    return {v['vaccine'] for v in result['recommended_vaccines']}
 
 
 def get_scheduled(result):
     """Extract the set of scheduled (future) vaccine names from an engine result."""
-    return {v['vacina'] for v in result['vacinas_aprazadas']}
+    return {v['vaccine'] for v in result['scheduled_vaccines']}
 
 
 def get_contraindicated(result):
     """Extract the set of contraindicated vaccine names from an engine result."""
-    return {v['vacina'] for v in result['vacinas_contraindicadas']}
+    return {v['vaccine'] for v in result['contraindicated_vaccines']}
 
 
 def get_up_to_date(result):
     """Extract the set of up-to-date vaccine names from an engine result."""
-    return {v['vacina'] for v in result['vacinas_em_dia']}
+    return {v['vaccine'] for v in result['up_to_date_vaccines']}
 
 
 def get_scheduled_for(result, vaccine):
     """Return the scheduling entry for a specific vaccine, or None if not found."""
-    return next((v for v in result['vacinas_aprazadas'] if v['vacina'] == vaccine), None)
+    return next((v for v in result['scheduled_vaccines'] if v['vaccine'] == vaccine), None)

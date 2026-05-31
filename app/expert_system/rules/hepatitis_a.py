@@ -8,17 +8,17 @@ if TYPE_CHECKING:
 else:
     _RegrasBase = object
 
-from .facts import Idade, DoseAplicada, RecomendacaoImediata, AgendamentoFuturo, Contraindicacao, EsquemaCompleto
+from .facts import Age, AppliedDose, ImmediateRecommendation, FutureSchedule, Contraindication, CompletedSchedule
 
-class RegrasHepatiteA(_RegrasBase):
+class RulesHepatitisA(_RegrasBase):
     """
     Vaccination rules for Hepatitis A (single dose at 15 months).
     """
 
     @Rule(
-        Idade(meses=MATCH.m, anos=MATCH.a, data_nascimento=MATCH.dn),
+        Age(months=MATCH.m, years=MATCH.a, birth_date=MATCH.dn),
         TEST(lambda a, m: (a * 12 + m) < 15),
-        NOT(DoseAplicada(vacina_codigo='HEPATITE_A'))
+        NOT(AppliedDose(vaccine_code='HEPATITE_A'))
     )
     def rule_hepatite_a_schedule(self, dn):
         """
@@ -28,56 +28,56 @@ class RegrasHepatiteA(_RegrasBase):
         dn_data = dn.date() if isinstance(dn, datetime.datetime) else dn
         data_alvo = dn_data + relativedelta(months=15)
 
-        self.declare(AgendamentoFuturo(
-            vacina="Hepatite A",
+        self.declare(FutureSchedule(
+            vaccine="Hepatite A",
             dose="Única",
-            data_minima=data_alvo,
-            data_recomendada=data_alvo,
-            explicacao="Agendamento da dose única de Hepatite A, recomendada aos 15 meses de idade."
+            min_date=data_alvo,
+            recommended_date=data_alvo,
+            explanation="Agendamento da dose única de Hepatite A, recomendada aos 15 meses de idade."
         ))
 
     @Rule(
-        Idade(meses=MATCH.m, anos=MATCH.a),
+        Age(months=MATCH.m, years=MATCH.a),
         TEST(lambda a, m: a < 5 and (a * 12 + m) >= 15),
-        NOT(DoseAplicada(vacina_codigo='HEPATITE_A'))
+        NOT(AppliedDose(vaccine_code='HEPATITE_A'))
     )
     def rule_hepatite_a_recommend_now(self):
         """
         (Recommendation) For children >= 15 months and < 5 years,
         recommends the single dose.
         """
-        self.declare(RecomendacaoImediata(
-            vacina="Hepatite A",
+        self.declare(ImmediateRecommendation(
+            vaccine="Hepatite A",
             dose="Única",
-            explicacao="A vacina contra Hepatite A é recomendada em dose única aos 15 meses de idade. Pode ser aplicada até os 4 anos, 11 meses e 29 dias."
+            explanation="A vacina contra Hepatite A é recomendada em dose única aos 15 meses de idade. Pode ser aplicada até os 4 anos, 11 meses e 29 dias."
         ))
 
     @Rule(
-        Idade(anos=MATCH.a), TEST(lambda a: a >= 5),
-        NOT(DoseAplicada(vacina_codigo='HEPATITE_A'))
+        Age(years=MATCH.a), TEST(lambda a: a >= 5),
+        NOT(AppliedDose(vaccine_code='HEPATITE_A'))
     )
     def rule_hepatite_a_contraindicated_age(self):
         """
         (Contraindication) For children >= 5 years with no dose,
         contraindicates the vaccine per PNI routine.
         """
-        self.declare(Contraindicacao(
-            vacina="Hepatite A",
+        self.declare(Contraindication(
+            vaccine="Hepatite A",
             dose="Única",
-            motivo="Idade superior à permitida.",
-            explicacao="A vacina Hepatite A na rotina do PNI é recomendada apenas até os 4 anos, 11 meses e 29 dias."
+            reason="Age superior à permitida.",
+            explanation="A vacina Hepatite A na rotina do PNI é recomendada apenas até os 4 anos, 11 meses e 29 dias."
         ))
 
     @Rule(
-        DoseAplicada(vacina_codigo='HEPATITE_A', data_aplicacao=MATCH.data_dose)
+        AppliedDose(vaccine_code='HEPATITE_A', date_applied=MATCH.data_dose)
     )
     def rule_hepatite_a_scheme_complete(self, data_dose):
         """
         (Scheme Complete) If the single Hepatitis A dose
         has been applied, marks the scheme as complete.
         """
-        self.declare(EsquemaCompleto(
-            vacina="Hepatite A",
-            explicacao="Esquema de dose única finalizado.",
-            data_ultima_dose=data_dose.date() if isinstance(data_dose, datetime.datetime) else data_dose
+        self.declare(CompletedSchedule(
+            vaccine="Hepatite A",
+            explanation="Esquema de dose única finalizado.",
+            last_dose_date=data_dose.date() if isinstance(data_dose, datetime.datetime) else data_dose
         ))

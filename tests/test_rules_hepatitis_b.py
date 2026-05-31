@@ -1,5 +1,5 @@
 """
-CE+VL tests for RegrasHepatiteB — IN 2026 §2.
+CE+VL tests for RulesHepatitisB — IN 2026 §2.
 Birth dose (monovalent). Adult schedule: 0-1-6 months.
 From 2m: schedule via Penta (recognized by PENTA/DTP).
 """

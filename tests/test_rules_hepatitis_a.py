@@ -1,5 +1,5 @@
 """
-CE+VL tests for RegrasHepatiteA — IN 2026 §15.
+CE+VL tests for RulesHepatitisA — IN 2026 §15.
 Single dose at 15 months. Contraindicated after 4y 11m 29d.
 """
 from helpers import run_engine, get_recommended, get_contraindicated, get_up_to_date

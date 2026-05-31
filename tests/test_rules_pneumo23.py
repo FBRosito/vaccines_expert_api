@@ -1,5 +1,5 @@
 """
-CE+VL tests for RegrasPneumo23 — IN 2026 §16.
+CE+VL tests for RulesPneumo23 — IN 2026 §16.
 Target: ≥60y (implemented for all; IN restricts to bedridden/institutionalized).
 Schedule: 2 doses, minimum 5-year interval.
 """
@@ -34,7 +34,7 @@ def test_p23_04_d1_ha_3anos_agendar_d2():
     apr = get_scheduled_for(r, 'Pneumocócica 23V')
     assert apr is not None
     assert apr['dose'] == 2
-    assert apr['data_minima'] == data_d1 + relativedelta(years=5)
+    assert apr['min_date'] == data_d1 + relativedelta(years=5)
 
 
 # P23-05  VL: D1 há 4a11m → ainda AgendamentoFuturo D2
@@ -51,8 +51,8 @@ def test_p23_06_d1_ha_5anos_recomendar_d2():
     data_d1 = today() - relativedelta(years=5)
     doses = [dose('PNEUMO23', data_d1, dose_num=1)]
     r = run_engine(birth_date_ago(years=65), doses)
-    assert any(v['vacina'] == 'Pneumocócica 23V' and v['dose'] == 2
-               for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'Pneumocócica 23V' and v['dose'] == 2
+               for v in r['recommended_vaccines'])
 
 
 # P23-07  CE: D1+D2 → EsquemaCompleto

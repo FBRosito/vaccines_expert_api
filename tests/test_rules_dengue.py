@@ -1,5 +1,5 @@
 """
-CE+VL tests for RegrasDengue — IN 2026 §19.
+CE+VL tests for RulesDengue — IN 2026 §19.
 Target: 10 to 14 years, 11 months and 29 days.
 Schedule: 2 doses, minimum interval of 90 days.
 """
@@ -20,7 +20,7 @@ def test_dng01_menor10_dengue_aprazada():
     apr = get_scheduled_for(r, 'Dengue')
     assert apr is not None
     data_esperada = dn + relativedelta(years=10)
-    assert apr['data_minima'] == data_esperada
+    assert apr['min_date'] == data_esperada
 
 
 # ---------------------------------------------------------------------------
@@ -76,7 +76,7 @@ def test_dng07_d1_ha_1mes_agendar_d2():
     assert apr is not None
     assert apr['dose'] == 2
     data_esperada = data_d1 + relativedelta(days=90)
-    assert apr['data_minima'] == data_esperada
+    assert apr['min_date'] == data_esperada
 
 
 # ---------------------------------------------------------------------------
@@ -98,8 +98,8 @@ def test_dng09_d1_ha_90d_recomendar_d2():
     data_d1 = today() - relativedelta(days=90)
     doses = [dose('DENGUE', data_d1, dose_num=1)]
     r = run_engine(birth_date_ago(years=12), doses)
-    assert any(v['vacina'] == 'Dengue' and v['dose'] == 2
-               for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'Dengue' and v['dose'] == 2
+               for v in r['recommended_vaccines'])
 
 
 # ---------------------------------------------------------------------------

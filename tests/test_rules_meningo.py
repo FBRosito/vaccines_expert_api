@@ -1,5 +1,5 @@
 """
-CE+VL tests for RegrasMeningo — IN 2026 §7 and §11.
+CE+VL tests for RulesMeningo — IN 2026 §7 and §11.
 Meningo C: pediatric (3m, 5m, 12m).
 Meningo ACWY: adolescents 11–14y.
 """
@@ -47,7 +47,7 @@ def test_men05_acwy_aplicada_em_dia():
 
 def test_men06_menor3m_men_c_aprazada():
     r = run_engine(birth_date_ago(months=2))
-    nomes_apr = {v['vacina'] for v in r['vacinas_aprazadas']}
+    nomes_apr = {v['vaccine'] for v in r['scheduled_vaccines']}
     # Men C pode estar aprazada ou já recomendada dependendo da regra exata
     assert ('Meningocócica C' in get_recommended(r) or
             'Meningocócica C' in nomes_apr)

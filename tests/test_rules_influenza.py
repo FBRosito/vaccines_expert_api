@@ -1,5 +1,5 @@
 """
-CE+VL tests for RegrasInfluenza — IN 2026 §8.
+CE+VL tests for RulesInfluenza — IN 2026 §8.
 Routine: children 6m–5y11m29d + elderly ≥60y.
 Extension (beyond literal IN): adolescents/adults 10–59y.
 First-time vaccination: 2 doses with a 30-day interval.
@@ -17,7 +17,7 @@ def test_inf01_menor6m_aprazada():
     assert 'Influenza' not in get_recommended(r)
     apr = get_scheduled_for(r, 'Influenza')
     assert apr is not None
-    assert apr['data_minima'] == dn + relativedelta(months=6)
+    assert apr['min_date'] == dn + relativedelta(months=6)
 
 
 # INF-02  VL: 6m0d sem dose → RecomendacaoImediata D1 primovacinação
@@ -39,7 +39,7 @@ def test_inf04_d1_ha_15d_agendar_d2():
     r = run_engine(birth_date_ago(years=2), doses)
     apr = get_scheduled_for(r, 'Influenza')
     assert apr is not None
-    assert apr['data_minima'] == data_d1 + relativedelta(days=30)
+    assert apr['min_date'] == data_d1 + relativedelta(days=30)
 
 
 # INF-05  VL: D1 há 29d (mesmo ano) → ainda AgendamentoFuturo D2
@@ -55,8 +55,8 @@ def test_inf06_d1_ha_30d_recomendar_d2():
     data_d1 = today() - relativedelta(days=30)
     doses = [dose('INFLUENZA', data_d1)]
     r = run_engine(birth_date_ago(years=2), doses)
-    assert any(v['vacina'] == 'Influenza' and v['dose'] == '2 (Primovacinação)'
-               for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'Influenza' and v['dose'] == '2 (Primovacinação)'
+               for v in r['recommended_vaccines'])
 
 
 # INF-07  CE: 2a, D1 no ano anterior → RecomendacaoImediata anual

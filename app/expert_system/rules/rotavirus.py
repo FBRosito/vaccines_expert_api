@@ -8,17 +8,17 @@ if TYPE_CHECKING:
 else:
     _RegrasBase = object
 
-from .facts import Idade, DoseAplicada, RecomendacaoImediata, AgendamentoFuturo, Contraindicacao, EsquemaCompleto
+from .facts import Age, AppliedDose, ImmediateRecommendation, FutureSchedule, Contraindication, CompletedSchedule
 
-class RegrasRotavirus(_RegrasBase):
+class RulesRotavirus(_RegrasBase):
     """
     Rules for Rotavirus (VORH), with strict age restrictions.
     """
 
     @Rule(
-        Idade(dias=MATCH.d, data_nascimento=MATCH.dn),
+        Age(days=MATCH.d, birth_date=MATCH.dn),
         TEST(lambda d: d < 45),
-        NOT(DoseAplicada(vacina_codigo='VORH', dose=1))
+        NOT(AppliedDose(vaccine_code='VORH', dose=1))
     )
     def rule_vorh_dose_1_schedule(self, dn):
         """
@@ -29,37 +29,37 @@ class RegrasRotavirus(_RegrasBase):
         data_min = dn_data + relativedelta(days=45)
         data_rec = dn_data + relativedelta(months=2)
 
-        self.declare(AgendamentoFuturo(
-            vacina="Rotavírus (VORH)",
+        self.declare(FutureSchedule(
+            vaccine="Rotavírus (VORH)",
             dose=1,
-            data_minima=data_min,
-            data_recomendada=data_rec,
-            explicacao="Agendamento da 1ª dose, recomendada aos 2 meses (idade mínima de 1 mês e 15 dias)."
+            min_date=data_min,
+            recommended_date=data_rec,
+            explanation="Agendamento da 1ª dose, recomendada aos 2 meses (idade mínima de 1 mês e 15 dias)."
         ))
 
     @Rule(
-        Idade(dias=MATCH.d), TEST(lambda d: d >= 45 and d <= 105),
-        NOT(DoseAplicada(vacina_codigo='VORH', dose=1))
+        Age(days=MATCH.d), TEST(lambda d: d >= 45 and d <= 105),
+        NOT(AppliedDose(vaccine_code='VORH', dose=1))
     )
     def rule_vorh_dose_1_recommend_now(self):
         """
         (Recommendation) Recommends dose 1 if the child is within the
         correct age window (1m 15d to 3m 15d).
         """
-        self.declare(RecomendacaoImediata(
-            vacina="Rotavírus (VORH)", dose=1,
-            explicacao="A 1ª dose da vacina Rotavírus é recomendada aos 2 meses, e o paciente está na janela de idade permitida para aplicação (1 mês e 15 dias a 3 meses e 15 dias)."
+        self.declare(ImmediateRecommendation(
+            vaccine="Rotavírus (VORH)", dose=1,
+            explanation="A 1ª dose da vacina Rotavírus é recomendada aos 2 meses, e o paciente está na janela de idade permitida para aplicação (1 mês e 15 dias a 3 meses e 15 dias)."
         ))
 
     @Rule(
-        Idade(dias=MATCH.dias_atuais, data_nascimento=MATCH.dn),
+        Age(days=MATCH.dias_atuais, birth_date=MATCH.dn),
         TEST(lambda dias_atuais: dias_atuais <= 240),
         OR(
-            DoseAplicada(vacina_codigo='VORH', dose=1, data_aplicacao=MATCH.d1_data),
-            AgendamentoFuturo(vacina="Rotavírus (VORH)", dose=1, data_recomendada=MATCH.d1_data)
+            AppliedDose(vaccine_code='VORH', dose=1, date_applied=MATCH.d1_data),
+            FutureSchedule(vaccine="Rotavírus (VORH)", dose=1, recommended_date=MATCH.d1_data)
         ),
-        NOT(DoseAplicada(vacina_codigo='VORH', dose=2)),
-        NOT(AgendamentoFuturo(vacina="Rotavírus (VORH)", dose=2))
+        NOT(AppliedDose(vaccine_code='VORH', dose=2)),
+        NOT(FutureSchedule(vaccine="Rotavírus (VORH)", dose=2))
     )
     def rule_vorh_dose_2_schedule(self, d1_data, dn):
         """
@@ -80,52 +80,52 @@ class RegrasRotavirus(_RegrasBase):
         data_limite = dn_data + relativedelta(months=7, days=29)
 
         if data_min_final <= data_limite:
-            self.declare(AgendamentoFuturo(
-                vacina="Rotavírus (VORH)", dose=2,
-                data_minima=data_min_final,
-                data_recomendada=data_rec_final,
-                explicacao="A 2ª dose da VORH é agendada com intervalo mínimo de 30 dias após a 1ª dose e deve ser aplicada a partir de 3 meses e 15 dias até os 7 meses e 29 dias de idade."
+            self.declare(FutureSchedule(
+                vaccine="Rotavírus (VORH)", dose=2,
+                min_date=data_min_final,
+                recommended_date=data_rec_final,
+                explanation="A 2ª dose da VORH é agendada com intervalo mínimo de 30 dias após a 1ª dose e deve ser aplicada a partir de 3 meses e 15 dias até os 7 meses e 29 dias de idade."
             ))
 
     @Rule(
-        DoseAplicada(vacina_codigo='VORH', dose=1, data_aplicacao=MATCH.d1),
-        Idade(dias=MATCH.dias_atuais),
+        AppliedDose(vaccine_code='VORH', dose=1, date_applied=MATCH.d1),
+        Age(days=MATCH.dias_atuais),
         TEST(lambda dias_atuais, d1:
             (dias_atuais >= 105 and dias_atuais <= 240) and
             (datetime.date.today() >= ((d1.date() if isinstance(d1, datetime.datetime) else d1) + relativedelta(days=30)))
         ),
-        NOT(DoseAplicada(vacina_codigo='VORH', dose=2))
+        NOT(AppliedDose(vaccine_code='VORH', dose=2))
     )
     def rule_vorh_dose_2_recommend_now_late(self):
         """
         (Recommendation) Recommends immediate dose 2 if within the age window
         (3m 15d to 7m 29d) and the minimum interval (30d) has been respected.
         """
-        self.declare(RecomendacaoImediata(
-            vacina="Rotavírus (VORH)",
+        self.declare(ImmediateRecommendation(
+            vaccine="Rotavírus (VORH)",
             dose=2,
-            explicacao="A 2ª dose da VORH está na janela de aplicação (3m15d a 7m29d) e o intervalo mínimo de 30 dias da 1ª dose foi respeitado."
+            explanation="A 2ª dose da VORH está na janela de aplicação (3m15d a 7m29d) e o intervalo mínimo de 30 dias da 1ª dose foi respeitado."
         ))
 
     @Rule(
-        Idade(dias=MATCH.d), TEST(lambda d: d > 105),
-        NOT(DoseAplicada(vacina_codigo='VORH', dose=1))
+        Age(days=MATCH.d), TEST(lambda d: d > 105),
+        NOT(AppliedDose(vaccine_code='VORH', dose=1))
     )
     def contraindicated_vorh_start_age(self, d):
         """
         (Contraindication) Contraindicates dose 1 if the child
         is older than 3 months and 15 days.
         """
-        self.declare(Contraindicacao(
-            vacina="Rotavírus (VORH)",
+        self.declare(Contraindication(
+            vaccine="Rotavírus (VORH)",
             dose=1,
-            motivo="Idade superior à permitida para a 1ª dose.",
-            explicacao=f"A 1ª dose da vacina Rotavírus só pode ser aplicada até os 3 meses e 15 dias de vida. A idade do paciente ultrapassou este limite."
+            reason="Age superior à permitida para a 1ª dose.",
+            explanation=f"A 1ª dose da vacina Rotavírus só pode ser aplicada até os 3 meses e 15 dias de vida. A idade do paciente ultrapassou este limite."
         ))
 
     @Rule(
-        DoseAplicada(vacina_codigo='VORH', dose=1),
-        Idade(dias=MATCH.d), NOT(DoseAplicada(vacina_codigo='VORH', dose=2)),
+        AppliedDose(vaccine_code='VORH', dose=1),
+        Age(days=MATCH.d), NOT(AppliedDose(vaccine_code='VORH', dose=2)),
         TEST(lambda d: d > 240)
     )
     def contraindicated_vorh_dose_2_age(self, d):
@@ -133,23 +133,23 @@ class RegrasRotavirus(_RegrasBase):
         (Contraindication) Contraindicates dose 2 if the child
         is older than 7 months and 29 days.
         """
-        self.declare(Contraindicacao(
-            vacina="Rotavírus (VORH)",
+        self.declare(Contraindication(
+            vaccine="Rotavírus (VORH)",
             dose=2,
-            motivo="Idade superior à permitida para a 2ª dose.",
-            explicacao=f"A 2ª dose da vacina Rotavírus só pode ser aplicada até os 7 meses e 29 dias de vida. A idade do paciente ultrapassou este limite."
+            reason="Age superior à permitida para a 2ª dose.",
+            explanation=f"A 2ª dose da vacina Rotavírus só pode ser aplicada até os 7 meses e 29 dias de vida. A idade do paciente ultrapassou este limite."
         ))
 
     @Rule(
-        DoseAplicada(vacina_codigo='VORH', dose=2, data_aplicacao=MATCH.d2_data)
+        AppliedDose(vaccine_code='VORH', dose=2, date_applied=MATCH.d2_data)
     )
     def rule_vorh_scheme_complete(self, d2_data):
         """
         (Scheme Complete) After dose 2 of VORH,
         marks the scheme as complete.
         """
-        self.declare(EsquemaCompleto(
-            vacina="Rotavírus (VORH)",
-            explicacao="Esquema de 2 doses finalizado.",
-            data_ultima_dose=d2_data.date() if isinstance(d2_data, datetime.datetime) else d2_data
+        self.declare(CompletedSchedule(
+            vaccine="Rotavírus (VORH)",
+            explanation="Esquema de 2 doses finalizado.",
+            last_dose_date=d2_data.date() if isinstance(d2_data, datetime.datetime) else d2_data
         ))

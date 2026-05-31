@@ -8,14 +8,14 @@ if TYPE_CHECKING:
 else:
     _RegrasBase = object
 
-from .facts import Idade, DoseAplicada, RecomendacaoImediata, AgendamentoFuturo, Contraindicacao, EsquemaCompleto
+from .facts import Age, AppliedDose, ImmediateRecommendation, FutureSchedule, Contraindication, CompletedSchedule
 
 def to_date(d):
     if isinstance(d, datetime.datetime):
         return d.date()
     return d
 
-class RegrasDengue(_RegrasBase):
+class RulesDengue(_RegrasBase):
     """
     Rules for the Dengue vaccine - Qdenga (attenuated tetravalent DNG) - PNI / IN 2026.
     Target population: Adolescents aged 10 to 14 years, 11 months and 29 days.
@@ -24,34 +24,34 @@ class RegrasDengue(_RegrasBase):
     """
 
     @Rule(
-        Idade(anos=MATCH.a, data_nascimento=MATCH.dn),
+        Age(years=MATCH.a, birth_date=MATCH.dn),
         TEST(lambda a: a < 10),
-        NOT(DoseAplicada(vacina_codigo='DENGUE'))
+        NOT(AppliedDose(vaccine_code='DENGUE'))
     )
     def rule_dengue_dose_1_schedule(self, dn):
         data_alvo = to_date(dn) + relativedelta(years=10)
-        self.declare(AgendamentoFuturo(
-            vacina="Dengue",
+        self.declare(FutureSchedule(
+            vaccine="Dengue",
             dose=1,
-            data_minima=data_alvo,
-            data_recomendada=data_alvo,
-            explicacao=(
+            min_date=data_alvo,
+            recommended_date=data_alvo,
+            explanation=(
                 "Agendamento da 1ª dose da vacina Dengue (Qdenga), "
                 "indicada a partir dos 10 anos de idade."
             )
         ))
 
     @Rule(
-        Idade(anos=MATCH.a),
+        Age(years=MATCH.a),
         TEST(lambda a: a >= 10 and a < 15),
-        NOT(DoseAplicada(vacina_codigo='DENGUE', dose=1)),
-        NOT(DoseAplicada(vacina_codigo='DENGUE', dose=2))
+        NOT(AppliedDose(vaccine_code='DENGUE', dose=1)),
+        NOT(AppliedDose(vaccine_code='DENGUE', dose=2))
     )
     def rule_dengue_dose_1_recommend(self, a):
-        self.declare(RecomendacaoImediata(
-            vacina="Dengue",
+        self.declare(ImmediateRecommendation(
+            vaccine="Dengue",
             dose=1,
-            explicacao=(
+            explanation=(
                 f"Adolescente com {a} anos na faixa-alvo do PNI (10 a 14 anos, 11 meses e 29 dias). "
                 "Recomenda-se a 1ª dose da vacina Dengue (Qdenga). "
                 "A 2ª dose deve ser aplicada 90 dias após a 1ª."
@@ -59,62 +59,62 @@ class RegrasDengue(_RegrasBase):
         ))
 
     @Rule(
-        Idade(anos=MATCH.a),
+        Age(years=MATCH.a),
         TEST(lambda a: a >= 15),
-        NOT(DoseAplicada(vacina_codigo='DENGUE', dose=1)),
-        NOT(DoseAplicada(vacina_codigo='DENGUE', dose=2))
+        NOT(AppliedDose(vaccine_code='DENGUE', dose=1)),
+        NOT(AppliedDose(vaccine_code='DENGUE', dose=2))
     )
     def rule_dengue_contraindicated_dose_1(self):
-        self.declare(Contraindicacao(
-            vacina="Dengue",
+        self.declare(Contraindication(
+            vaccine="Dengue",
             dose=1,
-            motivo="Janela etária para início do esquema encerrada.",
-            explicacao=(
+            reason="Janela etária para início do esquema encerrada.",
+            explanation=(
                 "A vacina Dengue (Qdenga) na rotina do PNI é indicada apenas para "
                 "adolescentes de 10 a 14 anos, 11 meses e 29 dias. "
-                "Paciente fora desta janela etária."
+                "Patient fora desta janela etária."
             )
         ))
 
     @Rule(
-        DoseAplicada(vacina_codigo='DENGUE', dose=1, data_aplicacao=MATCH.d1),
-        NOT(DoseAplicada(vacina_codigo='DENGUE', dose=2)),
+        AppliedDose(vaccine_code='DENGUE', dose=1, date_applied=MATCH.d1),
+        NOT(AppliedDose(vaccine_code='DENGUE', dose=2)),
         TEST(lambda d1: datetime.date.today() < (to_date(d1) + relativedelta(days=90)))
     )
     def rule_dengue_dose_2_schedule(self, d1):
         data_d2 = to_date(d1) + relativedelta(days=90)
-        self.declare(AgendamentoFuturo(
-            vacina="Dengue",
+        self.declare(FutureSchedule(
+            vaccine="Dengue",
             dose=2,
-            data_minima=data_d2,
-            data_recomendada=data_d2,
-            explicacao=(
+            min_date=data_d2,
+            recommended_date=data_d2,
+            explanation=(
                 "A 2ª dose da vacina Dengue (Qdenga) deve ser aplicada "
                 "90 dias (3 meses) após a 1ª dose."
             )
         ))
 
     @Rule(
-        DoseAplicada(vacina_codigo='DENGUE', dose=1, data_aplicacao=MATCH.d1),
-        NOT(DoseAplicada(vacina_codigo='DENGUE', dose=2)),
+        AppliedDose(vaccine_code='DENGUE', dose=1, date_applied=MATCH.d1),
+        NOT(AppliedDose(vaccine_code='DENGUE', dose=2)),
         TEST(lambda d1: datetime.date.today() >= (to_date(d1) + relativedelta(days=90)))
     )
     def rule_dengue_dose_2_recommend(self):
-        self.declare(RecomendacaoImediata(
-            vacina="Dengue",
+        self.declare(ImmediateRecommendation(
+            vaccine="Dengue",
             dose=2,
-            explicacao=(
+            explanation=(
                 "Intervalo de 90 dias após a 1ª dose cumprido. "
                 "Recomenda-se a 2ª dose da vacina Dengue (Qdenga)."
             )
         ))
 
     @Rule(
-        DoseAplicada(vacina_codigo='DENGUE', dose=2, data_aplicacao=MATCH.d2)
+        AppliedDose(vaccine_code='DENGUE', dose=2, date_applied=MATCH.d2)
     )
     def rule_dengue_scheme_complete(self, d2):
-        self.declare(EsquemaCompleto(
-            vacina="Dengue",
-            explicacao="Esquema de 2 doses da vacina Dengue (Qdenga) finalizado.",
-            data_ultima_dose=to_date(d2)
+        self.declare(CompletedSchedule(
+            vaccine="Dengue",
+            explanation="Esquema de 2 doses da vacina Dengue (Qdenga) finalizado.",
+            last_dose_date=to_date(d2)
         ))

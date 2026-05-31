@@ -1,5 +1,5 @@
 """
-CE+VL tests for RegrasCovid19 — IN 2026 §9.
+CE+VL tests for RulesCovid19 — IN 2026 §9.
 Routine: children 6m–4y11m29d + elderly ≥60y.
 Extension (beyond literal IN): adults 20–59y (annual).
 """
@@ -12,7 +12,7 @@ from dateutil.relativedelta import relativedelta
 def test_cov01_menor6m_aprazada():
     dn = birth_date_ago(months=5, days=29)
     r = run_engine(dn)
-    nomes = {v['vacina'] for v in r['vacinas_aprazadas']}
+    nomes = {v['vaccine'] for v in r['scheduled_vaccines']}
     assert any('COVID' in n for n in nomes)
     assert not any('COVID' in n for n in get_recommended(r))
 
@@ -30,7 +30,7 @@ def test_cov03_pfizer_d1_ha_3sem_agendar_d2():
     r = run_engine(birth_date_ago(years=2), doses)
     apr = get_scheduled_for(r, 'COVID-19 (Pfizer)')
     assert apr is not None and apr['dose'] == 2
-    assert apr['data_minima'] == data_d1 + relativedelta(weeks=4)
+    assert apr['min_date'] == data_d1 + relativedelta(weeks=4)
 
 
 # COV-04  VL: Pfizer D1 há 28d → RecomendacaoImediata D2
@@ -38,8 +38,8 @@ def test_cov04_pfizer_d1_ha_28d_recomendar_d2():
     data_d1 = today() - relativedelta(days=28)
     doses = [dose('COVID19_PFIZER', data_d1, dose_num=1)]
     r = run_engine(birth_date_ago(years=2), doses)
-    assert any(v['vacina'] == 'COVID-19 (Pfizer)' and v['dose'] == 2
-               for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'COVID-19 (Pfizer)' and v['dose'] == 2
+               for v in r['recommended_vaccines'])
 
 
 # COV-05  CE: Pfizer D2 há 4 semanas → AgendamentoFuturo D3 (D2+8sem)
@@ -53,7 +53,7 @@ def test_cov05_pfizer_d2_ha_4sem_agendar_d3():
     r = run_engine(birth_date_ago(years=2), doses)
     apr = get_scheduled_for(r, 'COVID-19 (Pfizer)')
     assert apr is not None and apr['dose'] == 3
-    assert apr['data_minima'] == data_d2 + relativedelta(weeks=8)
+    assert apr['min_date'] == data_d2 + relativedelta(weeks=8)
 
 
 # COV-06  VL: Pfizer D2 há 56d → RecomendacaoImediata D3
@@ -65,8 +65,8 @@ def test_cov06_pfizer_d2_ha_56d_recomendar_d3():
         dose('COVID19_PFIZER', data_d2, dose_num=2),
     ]
     r = run_engine(birth_date_ago(years=2), doses)
-    assert any(v['vacina'] == 'COVID-19 (Pfizer)' and v['dose'] == 3
-               for v in r['vacinas_recomendadas'])
+    assert any(v['vaccine'] == 'COVID-19 (Pfizer)' and v['dose'] == 3
+               for v in r['recommended_vaccines'])
 
 
 # COV-07  CE: Pfizer 3 doses → EsquemaCompleto
