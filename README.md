@@ -6,7 +6,7 @@
 [![Docker Supported](https://img.shields.io/badge/Docker-Supported-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
 [![Standard: HL7 FHIR](https://img.shields.io/badge/Standard-HL7_FHIR-firebrick.svg)](https://hl7.org/fhir/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/FBRosito/vaccines_expert_api/graphs/commit-activity)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://img.shields.io/badge/Maintained%3F-yes-green.svg)
 
 This repository contains the source code for the RESTful Application Programming Interface (API) and the underlying Expert System (ES) associated with the research paper: **"Apoio inteligente à decisão em atrasos vacinais: um sistema especialista para o Programa Nacional de Imunizações"**.
 
@@ -90,7 +90,7 @@ The project is fully containerized. To run the API, the Expert System, and the P
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/FBRosito/vaccines_expert_api.git
+git clone https://anonymous.repository/vaccines_expert_api.git
 cd vaccines_expert_api
 ```
 
@@ -123,9 +123,4 @@ You can send HTTP POST requests with FHIR-compliant JSON payloads to the configu
 
 ## 👥 Authors
 
-* **Fernando Barcelos Rosito**
-* Muriel Figueredo Franco
-* Juliana Silva Herbert
-* **Adriana Aparecida Paz**
-
-**Affiliation:** Federal University of Health Sciences of Porto Alegre (UFCSPA), Brazil. University of Zurich (UZH), Switzerland.
+Anonymized for peer review.

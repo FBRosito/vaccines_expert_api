@@ -3,7 +3,7 @@
 FROM python:3.9-slim
 
 # ---- Metadata ----
-LABEL maintainer="Fernando Barcelos Rosito <fernando.rosito@gmail.com>"
+LABEL maintainer="Anonymized for peer review"
 LABEL description="Vaccination Expert System API — Flask + Experta."
 
 # ---- Environment Variables ----
